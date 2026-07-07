@@ -16,11 +16,6 @@
     <version>3.2.0</version>
   </parent>
 
-  <!-- Where your React project lives, relative to this pom.xml -->
-  <properties>
-    <frontend.dir>frontend</frontend.dir>
-  </properties>
-
   <dependencies>
     <!-- Web -->
     <dependency>
@@ -76,69 +71,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-
-      <!-- Builds the React app (npm install + npm run build) during mvn package -->
-      <plugin>
-        <groupId>com.github.eirslett</groupId>
-        <artifactId>frontend-maven-plugin</artifactId>
-        <version>1.15.0</version>
-        <configuration>
-          <workingDirectory>${frontend.dir}</workingDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <id>install-node-and-npm</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <configuration>
-              <nodeVersion>v20.11.0</nodeVersion>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm-install</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <configuration>
-              <arguments>install</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm-build</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build</arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- Copies the built React files (frontend/dist) into Spring Boot's static resources -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-frontend-build</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${frontend.dir}/dist</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
