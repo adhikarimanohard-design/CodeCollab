@@ -345,7 +345,10 @@ body:has(button:hover) .cursor {
 .topbar-center { flex: 2; justify-content: center; }
 .topbar-right { gap: 10px; flex: 1; justify-content: flex-end; }
 
-/* App name is the primary brand mark — made prominent everywhere */
+/* App name is the primary brand mark — made prominent everywhere.
+   flex-shrink:0 + min-width guarantee it never gets squeezed out by
+   the room bar / status pill on narrow screens. order:-1 pins it as
+   the first visible item in topbar-left, ahead of the logo/status pill. */
 .app-name {
   font-family: var(--font-display);
   font-size: 17px;
@@ -356,6 +359,9 @@ body:has(button:hover) .cursor {
   -webkit-text-fill-color: transparent;
   text-shadow: var(--glow-sm);
   white-space: nowrap;
+  flex-shrink: 0;
+  min-width: max-content;
+  order: -1;
 }
 
 /* Credit line ("Personal project by ...") is relocated out of the topbar
@@ -479,6 +485,40 @@ body:has(button:hover) .cursor {
   background: rgba(255,106,240,0.1);
   box-shadow: 0 6px 20px rgba(255,106,240,0.18);
 }
+
+/* STRUCTURAL FALLBACK — the AI Assistant panel is always the first panel
+   inside .sidebar-left (per App.jsx panel order: aiPanel, outputPanel,
+   roomPanel). This styles any <button> rendered inside it the same way
+   as .ai-btn, WITHOUT depending on AIHelper.jsx using specific class
+   names — so Explain Code / Debug Code get the redesigned look even if
+   that component never applies .ai-btn/.explain-btn/.debug-btn. */
+.sidebar-left .panel:first-child .panel-body button {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg3);
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+  cursor: none;
+}
+.sidebar-left .panel:first-child .panel-body button:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: 0 6px 20px rgba(127,255,178,0.18);
+}
+.sidebar-left .panel:first-child .panel-body button:nth-of-type(2):hover {
+  border-color: var(--accent3);
+  color: var(--accent3);
+  background: rgba(255,106,240,0.1);
+  box-shadow: 0 6px 20px rgba(255,106,240,0.18);
+}
+.sidebar-left .panel:first-child .panel-body button:active { transform: translateY(0); }
 
 /* AI output surface — framed like a live console with its own header rail */
 .ai-output {
@@ -607,17 +647,25 @@ body:has(button:hover) .cursor {
   }
   .editor-main { height: 50vh; min-height: 260px; }
 
-  .sidebar-left, .sidebar-right {
-    width: 100%; border-right: none; border-left: none; flex-direction: row;
-    overflow-x: auto; overflow-y: hidden; height: auto;
+  .sidebar-left {
+    width: 100%; border-right: none;
+    flex-direction: row; overflow-x: auto; overflow-y: hidden; height: auto;
+    border-bottom: 1px solid var(--border); order: 2;
   }
-  .sidebar-left { border-bottom: 1px solid var(--border); order: 2; }
+  .sidebar-left .panel { min-width: 260px; border-bottom: none; border-right: 1px solid var(--border); flex-shrink: 0; }
+
+  /* Right sidebar (Online / Activity / Chat) stacks vertically so every
+     panel is reachable by scrolling down the page — nothing sits hidden
+     off-screen behind a sideways swipe. */
   .sidebar-right {
+    width: 100%; border-left: none;
+    flex-direction: column; overflow: visible; height: auto;
     border-top: 1px solid var(--border);
     order: 3;
     display: flex !important; /* ensure the right sidebar always renders on mobile */
   }
-  .sidebar-left .panel, .sidebar-right .panel { min-width: 260px; border-bottom: none; border-right: 1px solid var(--border); flex-shrink: 0; }
+  .sidebar-right .panel { width: 100%; border-right: none; }
+  .sidebar-right .panel-body { max-height: 260px; overflow-y: auto; }
 
   .editor-statusbar { font-size: 9px; gap: 8px; padding: 0 8px; }
   .modal-box { width: 95vw; padding: 24px 16px; }
@@ -630,3 +678,4 @@ body:has(button:hover) .cursor {
   /* Footer credit bar — always visible on mobile */
   .app-credit { font-size: 9px; padding: 0 10px; }
 }
+
