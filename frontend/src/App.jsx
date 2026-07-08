@@ -5,7 +5,7 @@ import Terminal from './components/Terminal';
 import { connectWebSocket, sendSocketChatMessage } from './utils/socket';
 import './index.css';
 
-const BASE_URL = "https://codecollab-v9om.onrender.com";
+const BASE_URL="https://codecollab-v9om.onrender.com";
 
 export default function App() {
   const [myId] = useState("user_" + Math.random().toString(36).substr(2, 6));
