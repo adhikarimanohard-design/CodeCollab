@@ -4,10 +4,10 @@ const AIHelper = ({
   editor, 
   showAuthModal, 
   showToast, 
-  addActivity, 
-  BASE_URL, 
+  addActivity
   authHeaders 
 }) => {
+const BASE_URL="https://codecollab-v9om.onrender.com";
   const [aiOutput, setAiOutput] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [codeOutput, setCodeOutput] = useState('');
