@@ -382,6 +382,10 @@ body:has(button:hover) .cursor {
   white-space: nowrap;
   z-index: 400;
   box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
+  pointer-events: none; /* purely decorative — must never intercept taps
+                            meant for content scrolled underneath it,
+                            which is what was blocking clicks on the
+                            Chat panel (the last thing on the page) */
 }
 
 /* Reserve space at the bottom of the layout so the fixed footer never
@@ -716,6 +720,7 @@ body:has(button:hover) .cursor {
   /* Footer credit bar — always visible on mobile */
   .app-credit { font-size: 9px; padding: 0 10px; }
 }
+
 
 
 
