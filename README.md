@@ -9,7 +9,7 @@ This project is built as a production-style developer tool demonstrating full-st
 
 ## 🖇 LIVE URL
 
-https://adhikarimanohard-design.github.io/Code-Forge--AI/
+https://code-forge-ai-omega.vercel.app/
 
 ---
 
