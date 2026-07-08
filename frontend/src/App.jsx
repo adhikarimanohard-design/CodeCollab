@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor from './components/Editor';
 import AIHelper from './components/AIHelper';
-import Terminal from './components/Terminal';
 import { connectWebSocket, sendSocketChatMessage } from './utils/socket';
 import './index.css';
 
