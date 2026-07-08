@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor from './components/Editor';
 import AIHelper from './components/AIHelper';
+import Terminal from './components/Terminal'; // NEW: was used below but never imported
 import { connectWebSocket, sendSocketChatMessage } from './utils/socket';
 import './index.css';
 
@@ -12,20 +13,20 @@ export default function App() {
   const [trailPos, setTrailPos] = useState({ x: 0, y: 0 });
   const trailRef = useRef({ x: 0, y: 0 });
   const [isOverText, setIsOverText] = useState(false);
-  // Real Monaco text-caret pixel position (not the mouse). While this is
-  // visible, the mouse-following .cursor/.cursor-trail are hidden and this
-  // dedicated caret overlay is shown instead, so there is only ever ONE
-  // cursor on screen while typing — glued exactly beside the last letter.
   const [caretPos, setCaretPos] = useState({ visible: false, left: 0, top: 0, height: 18 });
+
+  // NEW: holds the real Monaco editor instance once Editor.jsx mounts it,
+  // so it can be passed to AIHelper exactly like the old global `editor` was.
+  const editorInstanceRef = useRef(null);
 
   const [user, setUser] = useState({ name: 'Guest', token: null });
   const [authModalVisible, setAuthModalVisible] = useState(false);
-  const [authTab, setAuthTab] = useState('login'); 
-  
+  const [authTab, setAuthTab] = useState('login');
+
   const [regForm, setRegForm] = useState({ name: '', email: '', password: '' });
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [authError, setAuthError] = useState('');
-  
+
   const [toast, setToast] = useState({ msg: '', type: '', show: false });
   const [pendingAction, setPendingAction] = useState(null);
 
@@ -36,9 +37,6 @@ export default function App() {
 
   const [roomId, setRoomId] = useState('');
 
-  // Starter code shown for each language. Switching languages now swaps
-  // the editor content to match — previously it always stayed on the
-  // JavaScript snippet regardless of the selected language.
   const boilerplates = {
     javascript: `// Welcome to CodeCollab ⚡\n// Join a room and start coding together in real-time\n\nfunction greet(name) {\n  return \`Hello, \${name}! Let's build something amazing.\`;\n}\n\nconsole.log(greet("World"));`,
     typescript: `// Welcome to CodeCollab ⚡\n// Join a room and start coding together in real-time\n\nfunction greet(name: string): string {\n  return \`Hello, \${name}! Let's build something amazing.\`;\n}\n\nconsole.log(greet("World"));`,
@@ -50,14 +48,9 @@ export default function App() {
 
   const [language, setLanguage] = useState('javascript');
   const [currentCode, setCurrentCode] = useState(boilerplates.javascript);
-  // Remembers what you wrote in each language so switching back restores
-  // your own code instead of overwriting it with the boilerplate again.
   const [codeByLang, setCodeByLang] = useState(() => ({ ...boilerplates }));
 
   const handleLanguageChange = (newLang) => {
-    // Save whatever is currently in the editor under the language you're
-    // leaving, then load that language's saved code (or its boilerplate
-    // if you've never visited it yet).
     setCodeByLang(prev => {
       const updated = { ...prev, [language]: currentCode };
       setCurrentCode(updated[newLang] !== undefined ? updated[newLang] : (boilerplates[newLang] || ''));
@@ -65,7 +58,7 @@ export default function App() {
     });
     setLanguage(newLang);
   };
-  
+
   const [connectionStatus, setConnectionStatus] = useState('Disconnected');
   const [usersInRoom, setUsersInRoom] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
@@ -73,9 +66,6 @@ export default function App() {
   const [activityLog, setActivityLog] = useState([]);
 
   useEffect(() => {
-    // Elements the custom cursor should treat as "text" zones —
-    // matches on the actual element under the pointer, not a CSS
-    // :has() hover trick, so it works in every browser/webview.
     const isTextTarget = (el) => {
       if (!el) return false;
       return !!el.closest('#editor-container, input, textarea, .monaco-editor');
@@ -87,7 +77,7 @@ export default function App() {
       setIsOverText(isTextTarget(target));
     };
     window.addEventListener('mousemove', moveCursor);
-    
+
     let animationFrame;
     const animateTrail = () => {
       trailRef.current.x += (cursorPos.x - trailRef.current.x) * 0.15;
@@ -115,7 +105,7 @@ export default function App() {
   };
 
   const addActivity = (msg) => {
-    setActivityLog(prev => [msg, ...prev].slice(0, 10)); 
+    setActivityLog(prev => [msg, ...prev].slice(0, 10));
   };
 
   const requireAuth = (callback) => {
@@ -126,6 +116,14 @@ export default function App() {
       setPendingAction(() => callback);
     }
   };
+
+  // NEW: matches old app.js's authHeaders() — needed by AIHelper's
+  // explain/debug fetch calls, which previously crashed with
+  // "authHeaders is not a function" because it was never passed down.
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + (user.token || localStorage.getItem('cc_token'))
+  });
 
   const handleAuth = async (isLogin) => {
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
@@ -143,13 +141,13 @@ export default function App() {
       });
       const data = await res.json();
       if (!res.ok) { setAuthError(data.message || "Auth failed"); return; }
-      
+
       localStorage.setItem('cc_token', data.token);
       localStorage.setItem('cc_name', data.name);
       setUser({ name: data.name, token: data.token });
       setAuthModalVisible(false);
       showToast(isLogin ? `Welcome back, ${data.name}!` : 'Account created!', 'success');
-      
+
       if (pendingAction) { pendingAction(); setPendingAction(null); }
     } catch (e) {
       setAuthError("Server error. Try again.");
@@ -169,18 +167,18 @@ export default function App() {
     if (!id) { showToast('Enter a room ID', 'error'); return; }
     setConnectionStatus('Connecting...');
     setRoomId(id);
-    
-    fetch(`${BASE_URL}/health`).catch(() => {}); 
-    
+
+    fetch(`${BASE_URL}/health`).catch(() => {});
+
     connectWebSocket(id, myId, {
       onConnect: () => {
         setConnectionStatus('Connected');
         showToast(`Joined room: ${id}`, 'success');
         addActivity(`You joined room ${id}`);
-        
+
         if (user.token) {
-          fetch(`${BASE_URL}/api/room/${id}`, { 
-              headers: { 'Authorization': `Bearer ${user.token}` } 
+          fetch(`${BASE_URL}/api/room/${id}`, {
+              headers: { 'Authorization': `Bearer ${user.token}` }
           }).then(r => r.json()).then(room => {
             if (room.currentCode) setCurrentCode(room.currentCode);
             if (room.language) setLanguage(room.language);
@@ -201,7 +199,7 @@ export default function App() {
   const handleSendChat = () => {
     if (!chatInput.trim()) return;
     if (connectionStatus !== 'Connected') { showToast('Join a room first', 'error'); return; }
-    
+
     sendSocketChatMessage(roomId, myId, user.name, chatInput);
     setChatInput('');
   };
@@ -265,7 +263,15 @@ export default function App() {
                 <span className="panel-icon">◎</span><span className="panel-title">AI ASSISTANT</span><span className="panel-toggle">▾</span>
               </div>
               <div className="panel-body">
-                <AIHelper currentCode={currentCode} requireAuth={requireAuth} />
+                {/* FIXED: AIHelper now receives the props it actually expects:
+                    editor, showAuthModal, showToast, addActivity, authHeaders */}
+                <AIHelper
+                  editor={editorInstanceRef.current}
+                  showAuthModal={() => setAuthModalVisible(true)}
+                  showToast={showToast}
+                  addActivity={addActivity}
+                  authHeaders={authHeaders}
+                />
               </div>
             </div>
 
@@ -291,7 +297,16 @@ export default function App() {
             </div>
           </aside>
 
-          <Editor language={language} roomId={roomId} code={currentCode} setCode={setCurrentCode} myId={myId} onCaretPixelPosition={setCaretPos} />
+          {/* FIXED: pass onEditorMount so App.jsx captures the real Monaco instance */}
+          <Editor
+            language={language}
+            roomId={roomId}
+            code={currentCode}
+            setCode={setCurrentCode}
+            myId={myId}
+            onCaretPixelPosition={setCaretPos}
+            onEditorMount={(editor) => { editorInstanceRef.current = editor; }}
+          />
 
           <aside className="sidebar-right">
             <div className={`panel ${panels.onlinePanel ? 'collapsed' : ''}`}>
