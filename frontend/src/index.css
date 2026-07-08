@@ -472,26 +472,35 @@ body:has(button:hover) .cursor {
 .ai-btn:hover { transform: translateY(-1px); }
 .ai-btn:active { transform: translateY(0); }
 
-.explain-btn:hover {
-  border-color: var(--accent);
+.explain-btn {
+  border-color: rgba(127,255,178,0.35);
   color: var(--accent);
   background: var(--accent-dim);
-  box-shadow: 0 6px 20px rgba(127,255,178,0.18);
+}
+.explain-btn:hover {
+  border-color: var(--accent);
+  background: rgba(127,255,178,0.2);
+  box-shadow: 0 6px 20px rgba(127,255,178,0.28);
 }
 
-.debug-btn:hover {
-  border-color: var(--accent3);
+.debug-btn {
+  border-color: rgba(255,106,240,0.35);
   color: var(--accent3);
   background: rgba(255,106,240,0.1);
-  box-shadow: 0 6px 20px rgba(255,106,240,0.18);
+}
+.debug-btn:hover {
+  border-color: var(--accent3);
+  background: rgba(255,106,240,0.2);
+  box-shadow: 0 6px 20px rgba(255,106,240,0.28);
 }
 
 /* STRUCTURAL FALLBACK — the AI Assistant panel is always the first panel
    inside .sidebar-left (per App.jsx panel order: aiPanel, outputPanel,
-   roomPanel). This styles any <button> rendered inside it the same way
-   as .ai-btn, WITHOUT depending on AIHelper.jsx using specific class
-   names — so Explain Code / Debug Code get the redesigned look even if
-   that component never applies .ai-btn/.explain-btn/.debug-btn. */
+   roomPanel). This colors every <button> rendered inside it — Explain
+   Code, Debug Code, and its own Run Code control — WITHOUT depending on
+   AIHelper.jsx using specific class names. Colors are persistent (not
+   hover-only) so each action reads at a glance:
+   1st button (Explain) → green, 2nd (Debug) → pink, 3rd (Run) → cyan. */
 .sidebar-left .panel:first-child .panel-body button {
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -505,20 +514,41 @@ body:has(button:hover) .cursor {
   transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
   cursor: none;
 }
+.sidebar-left .panel:first-child .panel-body button:nth-of-type(1) {
+  border-color: rgba(127,255,178,0.35); color: var(--accent); background: var(--accent-dim);
+}
+.sidebar-left .panel:first-child .panel-body button:nth-of-type(2) {
+  border-color: rgba(255,106,240,0.35); color: var(--accent3); background: rgba(255,106,240,0.1);
+}
+.sidebar-left .panel:first-child .panel-body button:nth-of-type(3) {
+  border-color: rgba(0,229,255,0.35); color: var(--accent2); background: rgba(0,229,255,0.1);
+}
 .sidebar-left .panel:first-child .panel-body button:hover {
   transform: translateY(-1px);
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
-  box-shadow: 0 6px 20px rgba(127,255,178,0.18);
-}
-.sidebar-left .panel:first-child .panel-body button:nth-of-type(2):hover {
-  border-color: var(--accent3);
-  color: var(--accent3);
-  background: rgba(255,106,240,0.1);
-  box-shadow: 0 6px 20px rgba(255,106,240,0.18);
+  box-shadow: 0 6px 20px currentColor;
+  filter: brightness(1.15);
 }
 .sidebar-left .panel:first-child .panel-body button:active { transform: translateY(0); }
+
+/* Terminal panel (2nd panel in sidebar-left) — its own Run Code button,
+   colored cyan to match the AI panel's Run Code so the action reads the
+   same everywhere it appears. */
+.sidebar-left .panel:nth-child(2) .panel-body button {
+  border: 1px solid rgba(0,229,255,0.35);
+  border-radius: var(--radius);
+  background: rgba(0,229,255,0.1);
+  color: var(--accent2);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  transition: all 0.2s;
+  cursor: none;
+}
+.sidebar-left .panel:nth-child(2) .panel-body button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(0,229,255,0.2);
+  box-shadow: 0 6px 20px rgba(0,229,255,0.28);
+}
+.sidebar-left .panel:nth-child(2) .panel-body button:disabled { opacity: 0.5; }
 
 /* AI output surface — framed like a live console with its own header rail */
 .ai-output {
@@ -563,7 +593,7 @@ body:has(button:hover) .cursor {
 .terminal-dots span:nth-child(1) { background: var(--red); }
 .terminal-dots span:nth-child(2) { background: var(--yellow); }
 .terminal-dots span:nth-child(3) { background: var(--accent); }
-.run-btn { padding: 5px 14px; background: var(--accent); border: none; border-radius: 5px; color: var(--bg); font-family: var(--font-mono); font-size: 11px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.05em; cursor: none; }
+.run-btn { padding: 5px 14px; background: linear-gradient(135deg, var(--accent2), #00b8cc); border: none; border-radius: 5px; color: var(--bg); font-family: var(--font-mono); font-size: 11px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.05em; cursor: none; }
 .run-btn:hover:not(:disabled) { box-shadow: var(--glow-sm); transform: translateY(-1px); }
 .run-btn:disabled { opacity: 0.5; }
 .terminal-output { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--accent2); min-height: 80px; max-height: 160px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
@@ -643,9 +673,14 @@ body:has(button:hover) .cursor {
   .app-layout {
     flex-direction: column;
     overflow-y: auto;
+    min-height: 0; /* critical: without this, a flex:1 child ignores
+                      overflow-y:auto and grows past the viewport instead
+                      of scrolling — since html/body are overflow:hidden,
+                      that pushes Online/Activity/Chat somewhere totally
+                      unreachable, which is why they were "disappearing" */
     padding-bottom: calc(var(--footer-h) + 8px);
   }
-  .editor-main { height: 50vh; min-height: 260px; }
+  .editor-main { height: 50vh; min-height: 260px; flex-shrink: 0; }
 
   .sidebar-left {
     width: 100%; border-right: none;
@@ -678,4 +713,5 @@ body:has(button:hover) .cursor {
   /* Footer credit bar — always visible on mobile */
   .app-credit { font-size: 9px; padding: 0 10px; }
 }
+
 
