@@ -1,34 +1,39 @@
 import React, { useState } from 'react';
 
-const AIHelper = ({ 
+const CodeCollabFeatures = ({ 
   editor, 
   showAuthModal, 
   showToast, 
-  addActivity
+  addActivity, 
   authHeaders 
 }) => {
-const BASE_URL="https://codecollab-v9om.onrender.com";
-  const [aiOutput, setAiOutput] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [codeOutput, setCodeOutput] = useState('');
-  const [selectedLang, setSelectedLang] = useState('javascript');
+  const BASE_URL = 'https://codecollab-v9om.onrender.com';
 
+  const [aiOutput, setAiOutput] = useState('');
+  const [lang, setLang] = useState('javascript');
+  const [codeOutput, setCodeOutput] = useState('');
+
+  // ============================================
+  // AI EXPLAIN
+  // ============================================
   const explainCode = async () => {
     const token = localStorage.getItem('cc_token');
-    if (!token) { 
-      showAuthModal(); 
-      return; 
-    }
+    if (!token) { showAuthModal(); return; }
 
     const code = editor ? editor.getValue() : '';
+    // In React, state replaces: const output = document.getElementById('aiOutput');
 
     if (!code.trim()) {
       showToast('Nothing to explain', 'error');
       return;
     }
 
-    setIsAiLoading(true);
-    setAiOutput('');
+    // output.innerHTML = `<div class="ai-loading">...</div>`;
+    setAiOutput(
+      <div className="ai-loading">
+        <span></span><span></span><span></span>
+      </div>
+    );
 
     try {
       const res = await fetch(`${BASE_URL}/api/ai/explain`, {
@@ -36,34 +41,39 @@ const BASE_URL="https://codecollab-v9om.onrender.com";
         headers: authHeaders(),
         body: JSON.stringify({ code })
       });
-      
       const text = await res.text();
+      
+      // output.textContent = text;
       setAiOutput(text);
       addActivity('AI explained code');
 
     } catch (e) {
+      // output.textContent = 'AI error: ' + e.message;
       setAiOutput('AI error: ' + e.message);
-    } finally {
-      setIsAiLoading(false);
     }
   };
 
+  // ============================================
+  // AI DEBUG
+  // ============================================
   const debugCode = async () => {
     const token = localStorage.getItem('cc_token');
-    if (!token) { 
-      showAuthModal(); 
-      return; 
-    }
+    if (!token) { showAuthModal(); return; }
 
     const code = editor ? editor.getValue() : '';
+    // In React, state replaces: const output = document.getElementById('aiOutput');
 
     if (!code.trim()) {
       showToast('Nothing to debug', 'error');
       return;
     }
 
-    setIsAiLoading(true);
-    setAiOutput('');
+    // output.innerHTML = `<div class="ai-loading">...</div>`;
+    setAiOutput(
+      <div className="ai-loading">
+        <span></span><span></span><span></span>
+      </div>
+    );
 
     try {
       const res = await fetch(`${BASE_URL}/api/ai/debug`, {
@@ -71,28 +81,35 @@ const BASE_URL="https://codecollab-v9om.onrender.com";
         headers: authHeaders(),
         body: JSON.stringify({ code })
       });
-      
       const text = await res.text();
+      
+      // output.textContent = text;
       setAiOutput(text);
       addActivity('AI debugged code');
 
     } catch (e) {
+      // output.textContent = 'AI error: ' + e.message;
       setAiOutput('AI error: ' + e.message);
-    } finally {
-      setIsAiLoading(false);
     }
   };
 
+  // ============================================
+  // RUN CODE (Judge0 API)
+  // ============================================
   const runCode = async () => {
     const code = editor ? editor.getValue() : '';
+    // In React, state replaces: const lang = document.getElementById('langSelect').value;
+    // In React, state replaces: const output = document.getElementById('codeOutput');
 
     if (!code.trim()) {
       showToast('Nothing to run', 'error');
       return;
     }
 
+    // output.textContent = '~ running...';
     setCodeOutput('~ running...');
 
+    // Judge0 language IDs
     const langMap = {
       javascript: 63,
       typescript: 74,
@@ -102,7 +119,7 @@ const BASE_URL="https://codecollab-v9om.onrender.com";
       rust: 73
     };
 
-    const language_id = langMap[selectedLang];
+    const language_id = langMap[lang];
 
     try {
       const res = await fetch(
@@ -128,82 +145,55 @@ const BASE_URL="https://codecollab-v9om.onrender.com";
         data.message ||
         'No output';
 
+      // output.textContent = '~ ' + result;
       setCodeOutput('~ ' + result);
+
       addActivity('Code executed');
 
     } catch (e) {
+      // output.textContent = '~ Error: ' + e.message;
       setCodeOutput('~ Error: ' + e.message);
     }
   };
 
   return (
-    <div className="sidebar-left">
-      
-      {/* AI Panel */}
-      <div className="panel">
-        <div className="panel-header">
-          <span className="panel-icon">✨</span>
-          <span className="panel-title">AI ASSISTANT</span>
-        </div>
-        <div className="panel-body">
-          <div className="ai-buttons">
-            <button className="ai-btn explain-btn" onClick={explainCode}>
-              ✦ Explain
-            </button>
-            <button className="ai-btn debug-btn" onClick={debugCode}>
-              🐛 Debug
-            </button>
-          </div>
-          <div className="ai-output">
-            {isAiLoading ? (
-              <div className="ai-loading">
-                <span></span><span></span><span></span>
-              </div>
-            ) : (
-              aiOutput || 'Ask AI...'
-            )}
-          </div>
+    <>
+      {/* Container for AI outputs matching your old JS IDs */}
+      <div>
+        <button onClick={explainCode}>Explain Code</button>
+        <button onClick={debugCode}>Debug Code</button>
+        
+        <div id="aiOutput">
+          {aiOutput}
         </div>
       </div>
 
-      {/* Terminal Panel */}
-      <div className="panel">
-        <div className="panel-header">
-          <span className="panel-icon">▶</span>
-          <span className="panel-title">TERMINAL</span>
-        </div>
-        <div className="panel-body">
-          <div className="terminal-bar">
-            <div className="terminal-dots">
-              <span></span><span></span><span></span>
-            </div>
-            
-            <select 
-              className="lang-select"
-              value={selectedLang} 
-              onChange={(e) => setSelectedLang(e.target.value)}
-              style={{ marginLeft: 'auto', marginRight: '10px' }}
-            >
-              <option value="javascript">JavaScript</option>
-              <option value="typescript">TypeScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="cpp">C++</option>
-              <option value="rust">Rust</option>
-            </select>
+      <hr />
 
-            <button className="run-btn" onClick={runCode}>
-              Run
-            </button>
-          </div>
-          <div className="terminal-output">
-            {codeOutput || '~ Ready...'}
-          </div>
+      {/* Container for Run outputs matching your old JS IDs */}
+      <div>
+        <select 
+          id="langSelect" 
+          value={lang} 
+          onChange={(e) => setLang(e.target.value)}
+        >
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="rust">Rust</option>
+        </select>
+        
+        <button onClick={runCode}>Run Code</button>
+
+        <div id="codeOutput">
+          {codeOutput}
         </div>
       </div>
-
-    </div>
+    </>
   );
 };
 
-export default AIHelper;
+export default CodeCollabFeatures;
+
