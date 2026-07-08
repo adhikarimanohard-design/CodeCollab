@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import { sendSocketCodeUpdate } from '../utils/socket';
 
-export default function Editor({ language, roomId, code, setCode, myId, onCaretPixelPosition }) {
+export default function Editor({ language, roomId, code, setCode, myId, onCaretPixelPosition, onEditorMount }) {
   const [cursorPos, setCursorPos] = useState('Ln 1, Col 1');
   const [charCount, setCharCount] = useState(code.length);
   const [syncStatus, setSyncStatus] = useState('● Synced');
-  
+
   const editorRef = useRef(null);
   const debounceTimer = useRef(null);
 
@@ -68,6 +68,11 @@ export default function Editor({ language, roomId, code, setCode, myId, onCaretP
   const handleEditorMount = (editor, monaco) => {
     editorRef.current = editor;
 
+    // NEW: expose the real Monaco editor instance to the parent (App.jsx)
+    // so it can be passed down to AIHelper for explain/debug/run, exactly
+    // like old code relied on the global `editor` variable.
+    if (onEditorMount) onEditorMount(editor);
+
     editor.onDidChangeCursorPosition((e) => {
       setCursorPos(`Ln ${e.position.lineNumber}, Col ${e.position.column}`);
       reportCaretPixelPosition(editor);
@@ -121,7 +126,7 @@ export default function Editor({ language, roomId, code, setCode, myId, onCaretP
           <button className="action-btn" onClick={clearCode}>⌫ Clear</button>
         </div>
       </div>
-      
+
       <div id="editor-container" style={{ flex: 1, overflow: 'hidden' }}>
         <MonacoEditor
           height="100%"
