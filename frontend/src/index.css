@@ -423,7 +423,20 @@ body:has(button:hover) .cursor {
 
 /* Panels */
 .panel { border-bottom: 1px solid var(--border); overflow: hidden; }
-.panel-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; transition: background 0.2s; user-select: none; cursor: none;}
+.panel-header {
+  display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+  transition: background 0.2s; user-select: none; cursor: none;
+  /* FIX: mobile chat panel wasn't expanding on tap. Two causes addressed:
+     1) no touch-action meant taps inside the scrollable .app-layout could
+        be swallowed/delayed by the browser's scroll-gesture detection,
+        especially on the lowest panel (Chat) reached only after scrolling.
+     2) no explicit stacking context/z-index, so on some mobile browsers
+        the header could receive a tap that landed on a sibling instead. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
+}
 .panel-header:hover { background: var(--surface2); }
 .panel-icon { color: var(--accent); font-size: 12px; width: 16px; text-align: center; }
 .panel-title { font-size: 10px; letter-spacing: 0.15em; color: var(--text3); font-weight: 700; flex: 1; }
@@ -683,6 +696,10 @@ body:has(button:hover) .cursor {
                       that pushes Online/Activity/Chat somewhere totally
                       unreachable, which is why they were "disappearing" */
     padding-bottom: calc(var(--footer-h) + 8px);
+    -webkit-overflow-scrolling: touch; /* FIX: native momentum scroll so
+      taps on panel headers (esp. Chat, reached only after scrolling) are
+      registered as taps instead of getting eaten by scroll-gesture
+      detection on iOS/Android webviews. */
   }
   .editor-main { height: 50vh; min-height: 260px; flex-shrink: 0; }
 
@@ -705,6 +722,12 @@ body:has(button:hover) .cursor {
   }
   .sidebar-right .panel { width: 100%; border-right: none; }
 
+  /* Bigger, unambiguous tap target for panel headers on mobile — the
+     desktop 12px vertical padding is comfortable for a mouse click but
+     tight for a fingertip, which made the Chat panel header feel
+     unresponsive even once the touch-action fix above was in place. */
+  .panel-header { padding: 16px 14px; }
+
   .editor-statusbar { font-size: 9px; gap: 8px; padding: 0 8px; }
   .modal-box { width: 95vw; padding: 24px 16px; }
   .topbar-right { flex: 0; gap: 4px; }
@@ -720,6 +743,7 @@ body:has(button:hover) .cursor {
   /* Footer credit bar — always visible on mobile */
   .app-credit { font-size: 9px; padding: 0 10px; }
 }
+
 
 
 
