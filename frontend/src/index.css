@@ -751,6 +751,17 @@ body:has(button:hover) .cursor {
   }
   .sidebar-right .panel { width: 100%; border-right: none; }
 
+  /* ACTIVITY (2nd panel in sidebar-right) — forced visible on mobile.
+     display:block!important overrides .panel.collapsed .panel-body{display:none}
+     no matter what toggled it, so Activity can never end up hidden here. */
+  .sidebar-right .panel:nth-child(2) {
+    display: flex !important;
+    flex-direction: column;
+  }
+  .sidebar-right .panel:nth-child(2) .panel-body {
+    display: block !important;
+  }
+
   /* Chat is desktop-only per request — hidden on mobile while Online and
      Activity (the other two panels in sidebar-right) remain visible. */
   .sidebar-right .panel:nth-child(3) { display: none; }
@@ -760,6 +771,41 @@ body:has(button:hover) .cursor {
      tight for a fingertip, which made the Chat panel header feel
      unresponsive even once the touch-action fix above was in place. */
   .panel-header { padding: 16px 14px; }
+
+  /* AI ASSISTANT box shrunk on mobile only — smaller output area and
+     tighter buttons so the panel takes up less vertical space, leaving
+     more room for Online/Activity to fit into view without excessive
+     scrolling. Desktop sizing is untouched. */
+  .ai-output,
+  #aiOutput {
+    min-height: 60px;
+    max-height: 110px;
+    padding: 10px 10px 8px;
+    font-size: 10.5px;
+    line-height: 1.5;
+  }
+  .ai-buttons { gap: 6px; margin-bottom: 8px; }
+  .sidebar-left .panel:first-child .panel-body button {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  .sidebar-left .panel:first-child .panel-body { padding: 10px; }
+
+  /* TERMINAL box shrunk on mobile too, same reasoning as AI Assistant
+     above — smaller output area and tighter button/padding so the
+     combined page height leaves room for Activity to fit into view. */
+  .terminal-output {
+    min-height: 50px;
+    max-height: 90px;
+    padding: 8px;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .sidebar-left .panel:nth-child(2) .panel-body button {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  .sidebar-left .panel:nth-child(2) .panel-body { padding: 10px; }
 
   .editor-statusbar { font-size: 9px; gap: 8px; padding: 0 8px; }
   .modal-box { width: 95vw; padding: 24px 16px; }
