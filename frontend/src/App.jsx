@@ -105,7 +105,19 @@ export default function App() {
   };
 
   const addActivity = (msg) => {
-    setActivityLog(prev => [msg, ...prev].slice(0, 10));
+    // Give each entry a stable unique id (timestamp + random) instead of
+    // relying on array index as the React key further down — with index
+    // keys, prepending items reassigns every existing key on each update,
+    // which can make React skip/batch the visual update in a way that
+    // looks like the panel "isn't showing" the newest entries right away.
+    const entry = { id: Date.now() + '-' + Math.random().toString(36).slice(2), msg };
+    setActivityLog(prev => [entry, ...prev].slice(0, 10));
+
+    // Force the Activity panel open (not collapsed) the instant a new
+    // entry comes in, regardless of whatever toggle state it was left in
+    // — so it's guaranteed visible after the very 1st activity, not just
+    // after enough of them accumulate.
+    setPanels(prev => ({ ...prev, activityPanel: false }));
   };
 
   const requireAuth = (callback) => {
@@ -327,7 +339,7 @@ export default function App() {
               </div>
               <div className="panel-body">
                 <div className="activity-log">
-                  {activityLog.map((log, i) => <div key={i} className="activity-item">{log}</div>)}
+                  {activityLog.map((log) => <div key={log.id} className="activity-item">{log.msg}</div>)}
                 </div>
               </div>
             </div>
