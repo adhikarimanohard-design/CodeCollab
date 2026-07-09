@@ -423,7 +423,20 @@ body:has(button:hover) .cursor {
 
 /* Panels */
 .panel { border-bottom: 1px solid var(--border); overflow: hidden; }
-.panel-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; transition: background 0.2s; user-select: none; cursor: none;}
+.panel-header {
+  display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+  transition: background 0.2s; user-select: none; cursor: none;
+  /* FIX: mobile chat panel wasn't expanding on tap. Two causes addressed:
+     1) no touch-action meant taps inside the scrollable .app-layout could
+        be swallowed/delayed by the browser's scroll-gesture detection,
+        especially on the lowest panel (Chat) reached only after scrolling.
+     2) no explicit stacking context/z-index, so on some mobile browsers
+        the header could receive a tap that landed on a sibling instead. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
+}
 .panel-header:hover { background: var(--surface2); }
 .panel-icon { color: var(--accent); font-size: 12px; width: 16px; text-align: center; }
 .panel-title { font-size: 10px; letter-spacing: 0.15em; color: var(--text3); font-weight: 700; flex: 1; }
@@ -567,13 +580,38 @@ body:has(button:hover) .cursor {
   min-height: 90px;
   max-height: 220px;
   width: 100%;
-  overflow-x: hidden;
   overflow-y: auto;
+  overflow-x: hidden;
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
+  box-sizing: border-box;
   line-height: 1.65;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 0 1px rgba(127,255,178,0.04);
+}
+
+/* ID-based fallback: applies the exact same fix directly to #aiOutput,
+   since AIHelper.jsx's output div doesn't carry the .ai-output class.
+   This makes text wrap downward instead of spilling sideways without
+   needing any JSX change. */
+#aiOutput {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 12px 12px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--accent);
+  min-height: 90px;
+  max-height: 220px;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+  line-height: 1.65;
 }
 
 .ai-output::before {
@@ -588,21 +626,6 @@ body:has(button:hover) .cursor {
 
 .ai-output::-webkit-scrollbar { width: 3px; }
 .ai-output::-webkit-scrollbar-thumb { background: var(--border2); }
-
-/* STRUCTURAL FALLBACK — in case AIHelper.jsx's own output container
-   doesn't carry the .ai-output class, this targets it by position
-   instead: the last direct child inside the AI panel's body (after the
-   button rows). Caps it at a fixed height with its own internal scroll
-   so a long Explain/Debug answer scrolls *inside itself* and never
-   pushes the Online/Activity panels further down the page. */
-.sidebar-left .panel:first-child .panel-body > div:last-child {
-  max-height: 220px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
 
 .ai-loading { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
 .ai-loading span { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; animation: aiDot 1.2s ease-in-out infinite; }
@@ -702,6 +725,10 @@ body:has(button:hover) .cursor {
                       that pushes Online/Activity/Chat somewhere totally
                       unreachable, which is why they were "disappearing" */
     padding-bottom: calc(var(--footer-h) + 8px);
+    -webkit-overflow-scrolling: touch; /* FIX: native momentum scroll so
+      taps on panel headers (esp. Chat, reached only after scrolling) are
+      registered as taps instead of getting eaten by scroll-gesture
+      detection on iOS/Android webviews. */
   }
   .editor-main { height: 50vh; min-height: 260px; flex-shrink: 0; }
 
@@ -723,6 +750,16 @@ body:has(button:hover) .cursor {
     display: flex !important; /* ensure the right sidebar always renders on mobile */
   }
   .sidebar-right .panel { width: 100%; border-right: none; }
+
+  /* Chat is desktop-only per request — hidden on mobile while Online and
+     Activity (the other two panels in sidebar-right) remain visible. */
+  .sidebar-right .panel:nth-child(3) { display: none; }
+
+  /* Bigger, unambiguous tap target for panel headers on mobile — the
+     desktop 12px vertical padding is comfortable for a mouse click but
+     tight for a fingertip, which made the Chat panel header feel
+     unresponsive even once the touch-action fix above was in place. */
+  .panel-header { padding: 16px 14px; }
 
   .editor-statusbar { font-size: 9px; gap: 8px; padding: 0 8px; }
   .modal-box { width: 95vw; padding: 24px 16px; }
