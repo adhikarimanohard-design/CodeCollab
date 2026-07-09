@@ -280,7 +280,7 @@ export default function App() {
                 <span className="panel-icon">▶</span><span className="panel-title">TERMINAL</span><span className="panel-toggle">▾</span>
               </div>
               <div className="panel-body">
-                <Terminal currentCode={currentCode} language={language} />
+                <Terminal currentCode={currentCode} language={language} addActivity={addActivity} />
               </div>
             </div>
 
