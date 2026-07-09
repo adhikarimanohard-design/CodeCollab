@@ -10,7 +10,7 @@ const langMap = {
   rust: 73
 };
 
-export default function Terminal({ currentCode, language }) {
+export default function Terminal({ currentCode, language, addActivity }) {
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
 
@@ -48,8 +48,19 @@ export default function Terminal({ currentCode, language }) {
         'No output';
 
       setOutput('~ ' + result);
+
+      // NEW: log to the Activity panel once execution finishes. Uses
+      // stderr/compile_output presence to tell success from failure so
+      // the log entry is meaningful rather than just "ran code".
+      if (addActivity) {
+        const failed = !!(data.stderr || data.compile_output);
+        addActivity(failed ? `Code run failed (${language})` : `Ran ${language} code`);
+      }
     } catch (e) {
       setOutput('~ Error: ' + e.message);
+      if (addActivity) {
+        addActivity(`Code run failed (${language})`);
+      }
     } finally {
       setRunning(false);
     }
