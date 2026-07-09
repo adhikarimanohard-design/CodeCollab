@@ -452,6 +452,20 @@ body:has(button:hover) .cursor {
 .copy-room-btn { width: 100%; margin-top: 10px; padding: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text2); font-family: var(--font-mono); font-size: 11px; transition: all 0.2s; letter-spacing: 0.05em; cursor: none; }
 .copy-room-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ACTIVITY panel (2nd panel inside sidebar-right — Online / Activity /
+   Chat order) is force-visible unconditionally, on desktop AND mobile.
+   This sits at the base level (outside any media query) so it can never
+   be left hidden by a stale "collapsed" class or a narrower mobile-only
+   override — !important beats both the .panel.collapsed rule above and
+   any non-!important inline style a toggle might apply. */
+.sidebar-right .panel:nth-child(2) {
+  display: flex !important;
+  flex-direction: column;
+}
+.sidebar-right .panel:nth-child(2) .panel-body {
+  display: block !important;
+}
+
 /* Lists & Activities */
 .user-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .user-list li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); padding: 4px 0; animation: userJoin 0.3s ease forwards; }
@@ -751,19 +765,9 @@ body:has(button:hover) .cursor {
   }
   .sidebar-right .panel { width: 100%; border-right: none; }
 
-  /* ACTIVITY (2nd panel in sidebar-right) — forced visible on mobile.
-     display:block!important overrides .panel.collapsed .panel-body{display:none}
-     no matter what toggled it, so Activity can never end up hidden here. */
-  .sidebar-right .panel:nth-child(2) {
-    display: flex !important;
-    flex-direction: column;
-  }
-  .sidebar-right .panel:nth-child(2) .panel-body {
-    display: block !important;
-  }
-
-  /* Chat is desktop-only per request — hidden on mobile while Online and
-     Activity (the other two panels in sidebar-right) remain visible. */
+  /* Chat is hidden on mobile (and only on mobile) — Online and Activity,
+     the other two panels in sidebar-right, stay visible per the base-level
+     Activity fix above plus Online's default (unhidden) styling. */
   .sidebar-right .panel:nth-child(3) { display: none; }
 
   /* Bigger, unambiguous tap target for panel headers on mobile — the
