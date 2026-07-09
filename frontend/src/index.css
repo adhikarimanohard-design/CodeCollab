@@ -641,6 +641,19 @@ body:has(button:hover) .cursor {
 .ai-output::-webkit-scrollbar { width: 3px; }
 .ai-output::-webkit-scrollbar-thumb { background: var(--border2); }
 
+/* Markdown output (Explain/Debug Code) often renders <pre>/<code> blocks,
+   which carry the browser's own default white-space:pre — that default
+   silently overrides the wrapping rules above and is exactly what was
+   cutting text off on the right edge on mobile. Force these back to
+   wrapping too, in both the class- and ID-based output containers. */
+.ai-output pre, .ai-output code,
+#aiOutput pre, #aiOutput code {
+  white-space: pre-wrap !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
 .ai-loading { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
 .ai-loading span { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; animation: aiDot 1.2s ease-in-out infinite; }
 .ai-loading span:nth-child(2) { animation-delay: 0.2s; }
@@ -659,6 +672,12 @@ body:has(button:hover) .cursor {
 .terminal-output { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--accent2); min-height: 80px; max-height: 160px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
 .terminal-output::-webkit-scrollbar { width: 3px; }
 .terminal-output::-webkit-scrollbar-thumb { background: var(--border2); }
+.terminal-output pre, .terminal-output code {
+  white-space: pre-wrap !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
 
 /* Chat Panel */
 .chat-messages { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 10px; padding: 4px 0; }
@@ -719,16 +738,32 @@ body:has(button:hover) .cursor {
   .auth-tabs, .modal-box .tab-group { width: 100%; }
   .auth-tabs button, .modal-box .tab-group button, .auth-tab { flex: 1; text-align: center; }
 
-  .topbar { flex-wrap: wrap; height: auto; padding: 10px 12px; gap: 8px; }
-  .topbar-left { flex: 1; min-width: 0; }
-  .topbar-center { order: 3; width: 100%; }
-  .topbar-right { gap: 6px; }
+  /* Previously topbar-left and topbar-right both had flex:1 and sat side
+     by side in one row with flex-wrap on the parent — flex items shrink
+     to their min-content and get visually clipped ("Code-Forge-",
+     "Discon...") before the browser ever wraps them to a new line, and
+     topbar-center (the Room bar) got squeezed out of view entirely
+     instead of dropping to its own row. Switching .topbar itself to a
+     column stack guarantees each section gets its own full-width row on
+     mobile, so nothing can be clipped or pushed off-screen. */
+  .topbar { flex-direction: column; align-items: stretch; height: auto; padding: 10px 12px; gap: 8px; }
+  .topbar-left, .topbar-right {
+    width: 100%; flex: none;
+    flex-wrap: wrap; row-gap: 6px;
+  }
+  .topbar-left { order: 1; }
+  .topbar-center { order: 2; width: 100%; }
+  .topbar-right { order: 3; justify-content: space-between; }
 
   /* App name stays visible and prominent even on small screens */
   .app-name { display: block; font-size: 15px; }
 
+  /* Status pill ("Connected"/"Disconnected") wraps onto its own line
+     within topbar-left instead of getting truncated beside the app name. */
+  .status-pill { flex-basis: 100%; }
+
   .room-bar { width: 100%; justify-content: space-between; }
-  .room-bar input { width: 100%; flex: 1; }
+  .room-bar input { width: 100%; flex: 1; min-width: 0; }
 
   .app-layout {
     flex-direction: column;
@@ -813,7 +848,10 @@ body:has(button:hover) .cursor {
 
   .editor-statusbar { font-size: 9px; gap: 8px; padding: 0 8px; }
   .modal-box { width: 95vw; padding: 24px 16px; }
-  .topbar-right { flex: 0; gap: 4px; }
+  /* NOTE: keep width:100% (set earlier) so this row stays full-width and
+     stacked — a bare flex:0 here would shrink it back to content width
+     and reintroduce the clipped/overlapping topbar from before. */
+  .topbar-right { gap: 4px; }
   .editor-actions { display: none; }
   .room-btn { padding: 5px 8px; font-size: 10px; }
 
