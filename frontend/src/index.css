@@ -302,7 +302,6 @@ body:has(button:hover) .cursor {
 /* ============================================
    APP LAYOUT & TOPBAR
    ============================================ */
-/* FIX: Use 100dvh (dynamic viewport height) so mobile browser nav bars don't cut off the bottom content */
 .app-screen { 
   width: 100vw; 
   height: 100dvh; 
@@ -515,28 +514,8 @@ body:has(button:hover) .cursor {
 }
 .sidebar-left .panel:nth-child(2) .panel-body button:disabled { opacity: 0.5; }
 
-.ai-output {
-  position: relative;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 12px 12px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--accent);
-  min-height: 90px;
-  max-height: 220px;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  box-sizing: border-box;
-  line-height: 1.65;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 0 1px rgba(127,255,178,0.04);
-}
-
+/* AI Output Container forced wrapping logic */
+.ai-output,
 #aiOutput {
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -548,16 +527,21 @@ body:has(button:hover) .cursor {
   min-height: 90px;
   max-height: 220px;
   width: 100%;
+  max-width: 100%;
+  display: block;
   overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
   box-sizing: border-box;
   line-height: 1.65;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 0 1px rgba(127,255,178,0.04);
 }
 
-.ai-output::before {
+.ai-output::before,
+#aiOutput::before {
   content: '● AI ASSISTANT';
   display: block;
   font-size: 9px;
@@ -567,17 +551,26 @@ body:has(button:hover) .cursor {
   margin-bottom: 8px;
 }
 
-.ai-output::-webkit-scrollbar { width: 3px; }
-.ai-output::-webkit-scrollbar-thumb { background: var(--border2); }
+.ai-output::-webkit-scrollbar,
+#aiOutput::-webkit-scrollbar { 
+  width: 3px; 
+}
 
-/* Force all child elements (markdown headings, paragraphs, pre, code) to wrap instead of flowing horizontally */
-.ai-output pre, .ai-output code,
-#aiOutput pre, #aiOutput code,
-.ai-output *, #aiOutput * {
+.ai-output::-webkit-scrollbar-thumb,
+#aiOutput::-webkit-scrollbar-thumb { 
+  background: var(--border2); 
+}
+
+/* Force all child elements (markdown headings, paragraphs, pre, code) to wrap downwards */
+.ai-output *, 
+#aiOutput * {
   white-space: pre-wrap !important;
+  word-wrap: break-word !important;
   word-break: break-word !important;
-  overflow-wrap: break-word !important;
+  overflow-wrap: anywhere !important;
   max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
 }
 
 .ai-loading { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
@@ -715,7 +708,16 @@ body:has(button:hover) .cursor {
     flex-direction: row; overflow-x: auto; overflow-y: hidden; height: auto;
     border-bottom: 1px solid var(--border); order: 2;
   }
-  .sidebar-left .panel { min-width: 260px; border-bottom: none; border-right: 1px solid var(--border); flex-shrink: 0; }
+  
+  .sidebar-left .panel { 
+    min-width: 260px; 
+    width: 100%;
+    max-width: 100vw;
+    border-bottom: none; 
+    border-right: 1px solid var(--border); 
+    flex-shrink: 0; 
+    box-sizing: border-box;
+  }
 
   .sidebar-right {
     width: 100%; border-left: none;
@@ -740,13 +742,16 @@ body:has(button:hover) .cursor {
     padding: 10px 10px 8px;
     font-size: 10.5px;
     line-height: 1.5;
+    width: 100%;
+    box-sizing: border-box;
   }
+  
   .ai-buttons { gap: 6px; margin-bottom: 8px; }
   .sidebar-left .panel:first-child .panel-body button {
     padding: 8px 10px;
     font-size: 10px;
   }
-  .sidebar-left .panel:first-child .panel-body { padding: 10px; }
+  .sidebar-left .panel:first-child .panel-body { padding: 10px; width: 100%; box-sizing: border-box; overflow: hidden; }
 
   .terminal-output {
     min-height: 50px;
