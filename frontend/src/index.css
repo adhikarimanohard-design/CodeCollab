@@ -570,12 +570,14 @@ body:has(button:hover) .cursor {
 .ai-output::-webkit-scrollbar { width: 3px; }
 .ai-output::-webkit-scrollbar-thumb { background: var(--border2); }
 
+/* Force all child elements (markdown headings, paragraphs, pre, code) to wrap instead of flowing horizontally */
 .ai-output pre, .ai-output code,
-#aiOutput pre, #aiOutput code {
+#aiOutput pre, #aiOutput code,
+.ai-output *, #aiOutput * {
   white-space: pre-wrap !important;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  max-width: 100%;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
 }
 
 .ai-loading { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
@@ -703,7 +705,7 @@ body:has(button:hover) .cursor {
     overflow-y: auto;
     min-height: 0; 
     -webkit-overflow-scrolling: touch; 
-    padding-bottom: 24px; /* Give room at the absolute bottom of the page to scroll past the Activity Panel */
+    padding-bottom: 24px; 
   }
   
   .editor-main { height: 50vh; min-height: 260px; flex-shrink: 0; }
