@@ -234,8 +234,7 @@ export default function App() {
             <div className="app-logo">
               <span className="logo-bracket">{'{'}</span><span className="logo-dot sm"></span><span className="logo-bracket">{'}'}</span>
             </div>
-            <span className="app-name">Code-Forge--AI</span>
-            <span className="app-credit">Personal project by Adhikari Manohar ⚡️</span>
+            <span ClassName="app-name">Code-Forge--AI by adhikari manohar</span>
             <div className="status-pill">
               <span className={`status-dot ${connectionStatus === 'Connected' ? 'connected' : ''}`}></span>
               <span>{connectionStatus}</span>
