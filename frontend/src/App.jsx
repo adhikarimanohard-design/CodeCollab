@@ -1,828 +1,386 @@
-/* ============================================
-   CODE-FORGE--AI — DESIGN SYSTEM
-   ============================================ */
-
-:root {
-  --bg:         #080810;
-  --bg2:        #0d0d1a;
-  --bg3:        #12121f;
-  --surface:    #15151f;
-  --surface2:   #1a1a28;
-  --border:     rgba(255,255,255,0.06);
-  --border2:    rgba(255,255,255,0.12);
-
-  --accent:     #7fffb2;
-  --accent2:    #00e5ff;
-  --accent3:    #ff6af0;
-  --accent-dim: rgba(127,255,178,0.12);
-
-  --text:       #e8e8f0;
-  --text2:      #8888aa;
-  --text3:      #444466;
-
-  --red:        #ff4d6a;
-  --yellow:     #ffd166;
-
-  --font-display: 'Syne', sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
-  --font-ui:      'Space Mono', monospace;
-
-  --radius:     8px;
-  --radius-lg:  16px;
-
-  --glow:       0 0 30px rgba(127,255,178,0.15);
-  --glow-sm:    0 0 12px rgba(127,255,178,0.2);
-
-  /* Height reserved at the bottom of the viewport for the credit footer */
-  --footer-h:   28px;
-
-  /* Distance the custom cursor shifts to sit beside the text caret.
-     Set to 0 so it renders exactly at the pointer position, no gap. */
-  --cursor-text-offset: 0px;
-}
-
-/* Base Reset */
-*, *::before, *::after {
-  margin: 0; padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  width: 100%; height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
-  overflow: hidden;
-  cursor: none; /* Base cursor hidden */
-}
-
-/* ============================================
-   CUSTOM CURSOR (SIDE-BY-SIDE FIX)
-   ============================================ */
-.cursor, .cursor-trail {
-  position: fixed;
-  top: 0; left: 0;
-  pointer-events: none !important; /* Clicks pass through */
-  z-index: 9999;
-  border-radius: 50%;
-  /* Base state: dot/ring centered exactly on the pointer coordinates */
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s, background 0.2s, opacity 0.2s, transform 0.15s ease-out;
-  will-change: transform;
-}
-
-.cursor {
-  width: 8px; height: 8px;
-  background: var(--accent);
-  mix-blend-mode: difference;
-}
-
-.cursor-trail {
-  width: 32px; height: 32px;
-  border: 1px solid rgba(127,255,178,0.4);
-  z-index: 9998;
-}
-
-/* Enlarge cursor on buttons */
-body:has(button:hover) .cursor {
-  width: 16px; height: 16px;
-}
-
-/* Native OS cursor is fully hidden everywhere, including editor/inputs —
-   the custom .cursor / .cursor-trail elements are the ONLY cursor shown.
-   Previously this was set to `cursor: text` which made the browser's own
-   I-beam appear next to the custom green bar (the "two cursors" bug). */
-#editor-container, #editor-container *, input, textarea {
-  cursor: none !important;
-}
-
-/* Monaco renders its own blinking text caret by default. Now that we have
-   a dedicated .editor-caret overlay glued to the real caret position via
-   the Monaco API, Monaco's native caret is hidden so there is only ever
-   ONE visible cursor while typing in the code editor. */
-.monaco-editor .cursor {
-  opacity: 0 !important;
-}
-
-/* Dedicated text-caret overlay — positioned via Monaco's real cursor
-   coordinates (see Editor.jsx / App.jsx), NOT mouse position. This is
-   what actually sits exactly beside the last typed character. */
-.editor-caret {
-  position: fixed;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 6px rgba(127,255,178,0.9), 0 0 14px rgba(127,255,178,0.5);
-  pointer-events: none;
-  z-index: 9999;
-  animation: textCaretBlink 1s steps(1) infinite;
-}
-
-/* Plain text inputs (room id, chat, auth) outside Monaco still use the
-   mouse-following custom cursor, just styled as a slim caret when hovering
-   over them. */
-.cursor.cursor-text {
-  width: 2px;
-  height: 18px;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 6px rgba(127,255,178,0.9), 0 0 14px rgba(127,255,178,0.5);
-  transform: translate(var(--cursor-text-offset), -50%);
-}
-
-.cursor-trail.cursor-text {
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: radial-gradient(circle, rgba(127,255,178,0.22) 0%, rgba(127,255,178,0) 70%);
-  filter: blur(1px);
-  transform: translate(var(--cursor-text-offset), -50%);
-}
-
-@keyframes textCaretBlink {
-  0%, 45%   { opacity: 1; }
-  50%, 95%  { opacity: 0.15; }
-  100%      { opacity: 1; }
-}
-
-/* ============================================
-   NOISE TEXTURE
-   ============================================ */
-.noise {
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 9997;
-  opacity: 0.4;
-}
-
-/* ============================================
-   AUTH MODAL & FORMS (SPLIT UI)
-   ============================================ */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(8,8,16,0.85);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 500;
-}
-
-.modal-box {
-  position: relative;
-  width: 750px;
-  max-width: 95vw;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  padding: 32px;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-  animation: authReveal 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-
-@keyframes authReveal {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.modal-close {
-  position: absolute;
-  top: 16px; right: 16px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text3);
-  width: 28px; height: 28px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  cursor: none;
-}
-
-.modal-close:hover {
-  border-color: var(--red);
-  color: var(--red);
-}
-
-.auth-logo {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  justify-content: center;
-}
-
-.logo-icon {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.logo-bracket { color: var(--accent); text-shadow: var(--glow-sm); }
-.logo-dot { width: 8px; height: 8px; background: var(--accent3); border-radius: 50%; box-shadow: 0 0 12px var(--accent3); animation: pulse 2s ease-in-out infinite; }
-.logo-dot.sm { width: 5px; height: 5px; }
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.6; transform: scale(0.8); }
-}
-
-.logo-text h1 {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.logo-text p { font-size: 11px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
-
-/* Split Layout */
-.auth-split { display: flex; gap: 32px; }
-.auth-split-side { flex: 1; display: flex; flex-direction: column; }
-.auth-side-title { font-size: 14px; font-family: var(--font-display); font-weight: 700; color: var(--text); margin-bottom: 16px; text-align: center; letter-spacing: 0.05em; }
-
-.auth-divider { width: 1px; background: var(--border2); position: relative; }
-.auth-divider::after {
-  content: 'OR'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  background: var(--surface); padding: 8px 4px; color: var(--text3); font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-}
-
-/* ---- Sign In / Sign Up segmented tab control ----
-   Any pair of buttons that toggle auth mode (regardless of exact class
-   names used in JSX) are targeted here via a resilient combinator:
-   two adjacent buttons inside .auth-split or the modal header area. */
-.auth-tabs,
-.modal-box .tab-group {
-  display: inline-flex;
-  padding: 4px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  gap: 2px;
-}
-
-.auth-tabs button,
-.modal-box .tab-group button,
-.auth-tab {
-  padding: 8px 22px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text2);
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
-  cursor: none;
-}
-
-.auth-tabs button:hover,
-.modal-box .tab-group button:hover,
-.auth-tab:hover {
-  color: var(--text);
-}
-
-.auth-tabs button.active,
-.auth-tabs button[aria-selected="true"],
-.modal-box .tab-group button.active,
-.auth-tab.active,
-.auth-tab[aria-selected="true"] {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-  color: var(--bg);
-  box-shadow: 0 4px 18px rgba(127,255,178,0.35);
-}
-
-/* Form Inputs */
-.auth-form { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
-
-.input-wrap.input {
-  width: 100%; padding: 12px 16px; background: var(--bg3); border: 1px solid var(--border);
-  border-radius: var(--radius); color: var(--text); font-family: var(--font-mono); font-size: 13px;
-  outline: none; transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.input-wrap.input:focus { border-color: rgba(127,255,178,0.4); box-shadow: 0 0 0 3px rgba(127,255,178,0.08); }
-.input-wrap.input::placeholder { color: var(--text3); }
-
-/* Auth Button */
-.auth-btn {
-  width: 100%; padding: 14px; margin-top: 8px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-  border: none;
-  border-radius: var(--radius); color: var(--bg); font-family: var(--font-ui); font-size: 13px;
-  font-weight: 700; letter-spacing: 0.08em; transition: transform 0.2s, box-shadow 0.2s; cursor: none;
-}
-.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 34px rgba(127,255,178,0.4); }
-.auth-btn:active { transform: translateY(0); }
-.error-msg { font-size: 12px; color: var(--red); min-height: 18px; text-align: center; letter-spacing: 0.05em; margin-top: 8px; }
-
-/* ============================================
-   APP LAYOUT & TOPBAR
-   ============================================ */
-.app-screen { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
-.topbar {
-  height: 52px; background: var(--surface); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; padding: 0 16px; gap: 16px;
-  flex-shrink: 0; position: relative; z-index: 10;
-}
-.topbar::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.3;
-}
-.topbar-left, .topbar-center, .topbar-right { display: flex; align-items: center; }
-.topbar-left { gap: 12px; flex: 1; }
-.topbar-center { flex: 2; justify-content: center; }
-.topbar-right { gap: 10px; flex: 1; justify-content: flex-end; }
-
-/* App name is the primary brand mark — made prominent everywhere.
-   flex-shrink:0 + min-width guarantee it never gets squeezed out by
-   the room bar / status pill on narrow screens. order:-1 pins it as
-   the first visible item in topbar-left, ahead of the logo/status pill. */
-.app-name {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 60%, var(--accent2) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: var(--glow-sm);
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-width: max-content;
-  order: -1;
-}
-
-/* Credit line ("Personal project by ...") is relocated out of the topbar
-   into a persistent, always-visible footer bar via fixed positioning —
-   no structural/DOM change needed, it stays exactly where it is in markup. */
-.app-credit {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  height: var(--footer-h);
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  font-size: 10px;
-  color: var(--text2);
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  z-index: 400;
-  box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
-  pointer-events: none; /* purely decorative — must never intercept taps
-                            meant for content scrolled underneath it,
-                            which is what was blocking clicks on the
-                            Chat panel (the last thing on the page) */
-}
-
-/* Reserve space at the bottom of the layout so the fixed footer never
-   overlaps the editor, sidebars, or terminal output. */
-.app-layout { padding-bottom: var(--footer-h); }
-
-.status-pill { display: flex; align-items: center; gap: 6px; padding: 3px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 10px; color: var(--text2); letter-spacing: 0.08em; }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); transition: background 0.3s, box-shadow 0.3s; }
-.status-dot.connected { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: statusPulse 2s ease-in-out infinite; }
-.room-bar { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 4px 4px 12px; }
-.room-label { font-size: 9px; letter-spacing: 0.2em; color: var(--text3); white-space: nowrap; }
-.room-bar input { background: transparent; border: none; outline: none; color: var(--accent); font-family: var(--font-mono); font-size: 12px; width: 160px; letter-spacing: 0.05em; }
-.room-bar input::placeholder { color: var(--text3); }
-.room-btn { padding: 5px 12px; border: none; border-radius: 6px; font-family: var(--font-ui); font-size: 11px; transition: all 0.2s; letter-spacing: 0.05em; cursor: none;}
-.join-btn { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(127,255,178,0.2); }
-.join-btn:hover { background: var(--accent); color: var(--bg); }
-.new-btn { background: var(--accent); color: var(--bg); font-weight: 700; }
-.new-btn:hover { box-shadow: var(--glow-sm); transform: translateY(-1px); }
-.lang-select { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text2); font-family: var(--font-mono); font-size: 11px; padding: 5px 10px; outline: none; cursor: none;}
-.user-pill { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; }
-.user-avatar { width: 26px; height: 26px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--bg); }
-.user-pill span:last-child { font-size: 12px; color: var(--text2); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.logout-btn { width: 32px; height: 32px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text3); font-size: 14px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; cursor: none;}
-.logout-btn:hover { border-color: var(--red); color: var(--red); background: rgba(255,77,106,0.1); }
-
-/* ============================================
-   APP LAYOUT & SIDEBARS
-   ============================================ */
-.app-layout { display: flex; flex: 1; overflow: hidden; }
-.sidebar-left, .sidebar-right { background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
-.sidebar-left { width: 260px; border-right: 1px solid var(--border); }
-.sidebar-right { width: 260px; border-left: 1px solid var(--border); }
-.sidebar-left::-webkit-scrollbar, .sidebar-right::-webkit-scrollbar { width: 4px; }
-.sidebar-left::-webkit-scrollbar-thumb, .sidebar-right::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-/* Panels */
-.panel { border-bottom: 1px solid var(--border); overflow: hidden; }
-.panel-header {
-  display: flex; align-items: center; gap: 8px; padding: 12px 14px;
-  transition: background 0.2s; user-select: none; cursor: none;
-  /* FIX: mobile chat panel wasn't expanding on tap. Two causes addressed:
-     1) no touch-action meant taps inside the scrollable .app-layout could
-        be swallowed/delayed by the browser's scroll-gesture detection,
-        especially on the lowest panel (Chat) reached only after scrolling.
-     2) no explicit stacking context/z-index, so on some mobile browsers
-        the header could receive a tap that landed on a sibling instead. */
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  position: relative;
-  z-index: 1;
-}
-.panel-header:hover { background: var(--surface2); }
-.panel-icon { color: var(--accent); font-size: 12px; width: 16px; text-align: center; }
-.panel-title { font-size: 10px; letter-spacing: 0.15em; color: var(--text3); font-weight: 700; flex: 1; }
-.panel-toggle { color: var(--text3); font-size: 12px; transition: transform 0.3s; }
-.panel.collapsed .panel-toggle { transform: rotate(-90deg); }
-.panel.collapsed .panel-body { display: none; }
-.panel-body { padding: 12px; }
-.user-count { width: 18px; height: 18px; background: var(--accent-dim); border: 1px solid rgba(127,255,178,0.2); border-radius: 4px; font-size: 10px; color: var(--accent); display: flex; align-items: center; justify-content: center; }
-.room-info-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
-.room-info-item:last-of-type { border: none; }
-.info-label { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
-.info-value { font-family: var(--font-mono); font-size: 11px; color: var(--accent); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.copy-room-btn { width: 100%; margin-top: 10px; padding: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text2); font-family: var(--font-mono); font-size: 11px; transition: all 0.2s; letter-spacing: 0.05em; cursor: none; }
-.copy-room-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ACTIVITY panel (2nd panel inside sidebar-right — Online / Activity /
-   Chat order) is force-visible unconditionally, on desktop AND mobile.
-   This sits at the base level (outside any media query) so it can never
-   be left hidden by a stale "collapsed" class or a narrower mobile-only
-   override — !important beats both the .panel.collapsed rule above and
-   any non-!important inline style a toggle might apply. */
-.sidebar-right .panel:nth-child(2) {
-  display: flex !important;
-  flex-direction: column;
-}
-.sidebar-right .panel:nth-child(2) .panel-body {
-  display: block !important;
-}
-
-/* Lists & Activities */
-.user-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.user-list li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); padding: 4px 0; animation: userJoin 0.3s ease forwards; }
-@keyframes userJoin { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
-.user-list li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); flex-shrink: 0; }
-.activity-log { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
-.activity-item { font-size: 10px; color: var(--text3); padding: 4px 0 4px 8px; border-left: 2px solid var(--border); animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* ============================================
-   AI ASSISTANT PANEL — REDESIGNED
-   ============================================ */
-.ai-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-
-.ai-btn {
-  position: relative;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg3);
-  color: var(--text2);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
-  cursor: none;
-  overflow: hidden;
-}
-
-.ai-btn:hover { transform: translateY(-1px); }
-.ai-btn:active { transform: translateY(0); }
-
-.explain-btn {
-  border-color: rgba(127,255,178,0.35);
-  color: var(--accent);
-  background: var(--accent-dim);
-}
-.explain-btn:hover {
-  border-color: var(--accent);
-  background: rgba(127,255,178,0.2);
-  box-shadow: 0 6px 20px rgba(127,255,178,0.28);
-}
-
-.debug-btn {
-  border-color: rgba(255,106,240,0.35);
-  color: var(--accent3);
-  background: rgba(255,106,240,0.1);
-}
-.debug-btn:hover {
-  border-color: var(--accent3);
-  background: rgba(255,106,240,0.2);
-  box-shadow: 0 6px 20px rgba(255,106,240,0.28);
-}
-
-/* STRUCTURAL FALLBACK — the AI Assistant panel is always the first panel
-   inside .sidebar-left (per App.jsx panel order: aiPanel, outputPanel,
-   roomPanel). This colors every <button> rendered inside it — Explain
-   Code, Debug Code, and its own Run Code control — WITHOUT depending on
-   AIHelper.jsx using specific class names. Colors are persistent (not
-   hover-only) so each action reads at a glance:
-   1st button (Explain) → green, 2nd (Debug) → pink, 3rd (Run) → cyan. */
-.sidebar-left .panel:first-child .panel-body button {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg3);
-  color: var(--text2);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
-  cursor: none;
-}
-.sidebar-left .panel:first-child .panel-body button:nth-of-type(1) {
-  border-color: rgba(127,255,178,0.35); color: var(--accent); background: var(--accent-dim);
-}
-.sidebar-left .panel:first-child .panel-body button:nth-of-type(2) {
-  border-color: rgba(255,106,240,0.35); color: var(--accent3); background: rgba(255,106,240,0.1);
-}
-.sidebar-left .panel:first-child .panel-body button:nth-of-type(3) {
-  border-color: rgba(0,229,255,0.35); color: var(--accent2); background: rgba(0,229,255,0.1);
-}
-.sidebar-left .panel:first-child .panel-body button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px currentColor;
-  filter: brightness(1.15);
-}
-.sidebar-left .panel:first-child .panel-body button:active { transform: translateY(0); }
-
-/* Terminal panel (2nd panel in sidebar-left) — its own Run Code button,
-   colored cyan to match the AI panel's Run Code so the action reads the
-   same everywhere it appears. */
-.sidebar-left .panel:nth-child(2) .panel-body button {
-  border: 1px solid rgba(0,229,255,0.35);
-  border-radius: var(--radius);
-  background: rgba(0,229,255,0.1);
-  color: var(--accent2);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  transition: all 0.2s;
-  cursor: none;
-}
-.sidebar-left .panel:nth-child(2) .panel-body button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: rgba(0,229,255,0.2);
-  box-shadow: 0 6px 20px rgba(0,229,255,0.28);
-}
-.sidebar-left .panel:nth-child(2) .panel-body button:disabled { opacity: 0.5; }
-
-/* AI output surface — framed like a live console with its own header rail */
-.ai-output {
-  position: relative;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 12px 12px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--accent);
-  min-height: 90px;
-  max-height: 220px;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  box-sizing: border-box;
-  line-height: 1.65;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 0 1px rgba(127,255,178,0.04);
-}
-
-/* ID-based fallback: applies the exact same fix directly to #aiOutput,
-   since AIHelper.jsx's output div doesn't carry the .ai-output class.
-   This makes text wrap downward instead of spilling sideways without
-   needing any JSX change. */
-#aiOutput {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 12px 12px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--accent);
-  min-height: 90px;
-  max-height: 220px;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  box-sizing: border-box;
-  line-height: 1.65;
-}
-
-.ai-output::before {
-  content: '● AI ASSISTANT';
-  display: block;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--text3);
-  margin-bottom: 8px;
-}
-
-.ai-output::-webkit-scrollbar { width: 3px; }
-.ai-output::-webkit-scrollbar-thumb { background: var(--border2); }
-
-.ai-loading { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
-.ai-loading span { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; animation: aiDot 1.2s ease-in-out infinite; }
-.ai-loading span:nth-child(2) { animation-delay: 0.2s; }
-.ai-loading span:nth-child(3) { animation-delay: 0.4s; }
-
-/* Terminal */
-.terminal-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.terminal-dots { display: flex; gap: 5px; }
-.terminal-dots span { width: 8px; height: 8px; border-radius: 50%; }
-.terminal-dots span:nth-child(1) { background: var(--red); }
-.terminal-dots span:nth-child(2) { background: var(--yellow); }
-.terminal-dots span:nth-child(3) { background: var(--accent); }
-.run-btn { padding: 5px 14px; background: linear-gradient(135deg, var(--accent2), #00b8cc); border: none; border-radius: 5px; color: var(--bg); font-family: var(--font-mono); font-size: 11px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.05em; cursor: none; }
-.run-btn:hover:not(:disabled) { box-shadow: var(--glow-sm); transform: translateY(-1px); }
-.run-btn:disabled { opacity: 0.5; }
-.terminal-output { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--accent2); min-height: 80px; max-height: 160px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
-.terminal-output::-webkit-scrollbar { width: 3px; }
-.terminal-output::-webkit-scrollbar-thumb { background: var(--border2); }
-
-/* Chat Panel */
-.chat-messages { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 10px; padding: 4px 0; }
-.chat-messages::-webkit-scrollbar { width: 3px; }
-.chat-messages::-webkit-scrollbar-thumb { background: var(--border2); }
-.chat-msg { display: flex; flex-direction: column; gap: 2px; max-width: 90%; }
-.chat-me { align-self: flex-end; align-items: flex-end; }
-.chat-them { align-self: flex-start; align-items: flex-start; }
-.chat-name { font-size: 9px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
-.chat-text { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-family: var(--font-mono); line-height: 1.4; word-break: break-word; }
-.chat-me .chat-text { background: var(--accent); color: var(--bg); border-bottom-right-radius: 2px; }
-.chat-them .chat-text { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
-.chat-input-bar { display: flex; gap: 6px; align-items: center; }
-.chat-input-bar input { flex: 1; padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font-mono); font-size: 12px; outline: none; }
-.chat-input-bar input:focus { border-color: rgba(127,255,178,0.4); }
-.chat-send-btn { width: 32px; height: 32px; background: var(--accent); border: none; border-radius: var(--radius); color: var(--bg); font-size: 14px; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: none; }
-.chat-send-btn:hover { box-shadow: var(--glow-sm); transform: translateY(-1px); }
-
-/* ============================================
-   EDITOR MAIN
-   ============================================ */
-.editor-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-.editor-topbar { height: 36px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 0; }
-.file-tab { display: flex; align-items: center; gap: 8px; padding: 0 20px; height: 100%; border-right: 1px solid var(--border); font-size: 12px; color: var(--text2); position: relative; }
-.file-tab.active { color: var(--text); background: var(--bg); }
-.file-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); box-shadow: var(--glow-sm); }
-.file-icon { color: var(--accent); font-size: 10px; }
-.editor-actions { display: flex; gap: 4px; }
-.action-btn { padding: 4px 10px; background: transparent; border: 1px solid var(--border); border-radius: 5px; color: var(--text3); font-family: var(--font-mono); font-size: 10px; transition: all 0.2s; letter-spacing: 0.05em; cursor: none; }
-.action-btn:hover { border-color: var(--accent); color: var(--accent); }
-#editor-container { flex: 1; overflow: hidden; }
-.editor-statusbar { height: 24px; background: var(--accent); display: flex; align-items: center; padding: 0 12px; gap: 16px; font-size: 10px; color: var(--bg); font-family: var(--font-mono); letter-spacing: 0.05em; }
-.sync-indicator { margin-left: auto; display: flex; align-items: center; gap: 4px; font-weight: 700; }
-
-/* ============================================
-   TOAST
-   ============================================ */
-.toast {
-  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-  background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius);
-  padding: 10px 20px; font-size: 12px; color: var(--text); font-family: var(--font-mono);
-  letter-spacing: 0.05em; z-index: 9990; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s;
-  opacity: 0; pointer-events: none; box-shadow: 0 8px 32px rgba(0,0,0,0.4); white-space: nowrap;
-}
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.success { border-color: rgba(127,255,178,0.4); color: var(--accent); }
-.toast.error { border-color: rgba(255,77,106,0.4); color: var(--red); }
-
-/* ============================================
-   MOBILE RESPONSIVE
-   ============================================ */
-@media (max-width: 768px) {
-  *, *::before, *::after { cursor: auto !important; }
-  .cursor, .cursor-trail { display: none !important; }
-
-  .auth-split { flex-direction: column; gap: 24px; }
-  .auth-divider { width: 100%; height: 1px; }
-  .auth-tabs, .modal-box .tab-group { width: 100%; }
-  .auth-tabs button, .modal-box .tab-group button, .auth-tab { flex: 1; text-align: center; }
-
-  .topbar { flex-wrap: wrap; height: auto; padding: 10px 12px; gap: 8px; }
-  .topbar-left { flex: 1; min-width: 0; }
-  .topbar-center { order: 3; width: 100%; }
-  .topbar-right { gap: 6px; }
-
-  /* App name stays visible and prominent even on small screens */
-  .app-name { display: block; font-size: 15px; }
-
-  .room-bar { width: 100%; justify-content: space-between; }
-  .room-bar input { width: 100%; flex: 1; }
-
-  .app-layout {
-    flex-direction: column;
-    overflow-y: auto;
-    min-height: 0; /* critical: without this, a flex:1 child ignores
-                      overflow-y:auto and grows past the viewport instead
-                      of scrolling — since html/body are overflow:hidden,
-                      that pushes Online/Activity/Chat somewhere totally
-                      unreachable, which is why they were "disappearing" */
-    padding-bottom: calc(var(--footer-h) + 8px);
-    -webkit-overflow-scrolling: touch; /* FIX: native momentum scroll so
-      taps on panel headers (esp. Chat, reached only after scrolling) are
-      registered as taps instead of getting eaten by scroll-gesture
-      detection on iOS/Android webviews. */
-  }
-  .editor-main { height: 50vh; min-height: 260px; flex-shrink: 0; }
-
-  .sidebar-left {
-    width: 100%; border-right: none;
-    flex-direction: row; overflow-x: auto; overflow-y: hidden; height: auto;
-    border-bottom: 1px solid var(--border); order: 2;
-  }
-  .sidebar-left .panel { min-width: 260px; border-bottom: none; border-right: 1px solid var(--border); flex-shrink: 0; }
-
-  /* Right sidebar (Online / Activity / Chat) stacks vertically so every
-     panel is reachable by scrolling down the page — nothing sits hidden
-     off-screen behind a sideways swipe. */
-  .sidebar-right {
-    width: 100%; border-left: none;
-    flex-direction: column; overflow: visible; height: auto;
-    border-top: 1px solid var(--border);
-    order: 3;
-    display: flex !important; /* ensure the right sidebar always renders on mobile */
-  }
-  .sidebar-right .panel { width: 100%; border-right: none; }
-
-  /* Chat is hidden on mobile (and only on mobile) — Online and Activity,
-     the other two panels in sidebar-right, stay visible per the base-level
-     Activity fix above plus Online's default (unhidden) styling. */
-  .sidebar-right .panel:nth-child(3) { display: none; }
-
-  /* Bigger, unambiguous tap target for panel headers on mobile — the
-     desktop 12px vertical padding is comfortable for a mouse click but
-     tight for a fingertip, which made the Chat panel header feel
-     unresponsive even once the touch-action fix above was in place. */
-  .panel-header { padding: 16px 14px; }
-
-  /* AI ASSISTANT box shrunk on mobile only — smaller output area and
-     tighter buttons so the panel takes up less vertical space, leaving
-     more room for Online/Activity to fit into view without excessive
-     scrolling. Desktop sizing is untouched. */
-  .ai-output,
-  #aiOutput {
-    min-height: 60px;
-    max-height: 110px;
-    padding: 10px 10px 8px;
-    font-size: 10.5px;
-    line-height: 1.5;
-  }
-  .ai-buttons { gap: 6px; margin-bottom: 8px; }
-  .sidebar-left .panel:first-child .panel-body button {
-    padding: 8px 10px;
-    font-size: 10px;
-  }
-  .sidebar-left .panel:first-child .panel-body { padding: 10px; }
-
-  /* TERMINAL box shrunk on mobile too, same reasoning as AI Assistant
-     above — smaller output area and tighter button/padding so the
-     combined page height leaves room for Activity to fit into view. */
-  .terminal-output {
-    min-height: 50px;
-    max-height: 90px;
-    padding: 8px;
-    font-size: 10px;
-    line-height: 1.4;
-  }
-  .sidebar-left .panel:nth-child(2) .panel-body button {
-    padding: 8px 10px;
-    font-size: 10px;
-  }
-  .sidebar-left .panel:nth-child(2) .panel-body { padding: 10px; }
-
-  .editor-statusbar { font-size: 9px; gap: 8px; padding: 0 8px; }
-  .modal-box { width: 95vw; padding: 24px 16px; }
-  .topbar-right { flex: 0; gap: 4px; }
-  .editor-actions { display: none; }
-  .room-btn { padding: 5px 8px; font-size: 10px; }
-
-  /* Compact the right-side controls so the app name never gets crowded
-     out — Guest pill shrinks to just the avatar, dropdown narrows. */
-  .user-pill span:last-child { display: none; }
-  .user-pill { padding: 4px; }
-  .lang-select { width: 44px; padding: 4px 2px; font-size: 9px; }
-
-  /* Footer credit bar — always visible on mobile */
-  .app-credit { font-size: 9px; padding: 0 10px; }
+import { useState, useEffect, useRef } from 'react';
+import Editor from './components/Editor';
+import AIHelper from './components/AIHelper';
+import Terminal from './components/Terminal'; // NEW: was used below but never imported
+import { connectWebSocket, sendSocketChatMessage } from './utils/socket';
+import './index.css';
+
+const BASE_URL="https://codecollab-v9om.onrender.com";
+
+export default function App() {
+  const [myId] = useState("user_" + Math.random().toString(36).substr(2, 6));
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [trailPos, setTrailPos] = useState({ x: 0, y: 0 });
+  const trailRef = useRef({ x: 0, y: 0 });
+  const [isOverText, setIsOverText] = useState(false);
+  const [caretPos, setCaretPos] = useState({ visible: false, left: 0, top: 0, height: 18 });
+
+  // NEW: holds the real Monaco editor instance once Editor.jsx mounts it,
+  // so it can be passed to AIHelper exactly like the old global `editor` was.
+  const editorInstanceRef = useRef(null);
+
+  const [user, setUser] = useState({ name: 'Guest', token: null });
+  const [authModalVisible, setAuthModalVisible] = useState(false);
+  const [authTab, setAuthTab] = useState('login');
+
+  const [regForm, setRegForm] = useState({ name: '', email: '', password: '' });
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [authError, setAuthError] = useState('');
+
+  const [toast, setToast] = useState({ msg: '', type: '', show: false });
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const [panels, setPanels] = useState({
+    aiPanel: false, outputPanel: false, roomPanel: false,
+    onlinePanel: false, activityPanel: false, chatPanel: false
+  });
+
+  const [roomId, setRoomId] = useState('');
+
+  const boilerplates = {
+    javascript: `// Welcome to CodeCollab ⚡\n// Join a room and start coding together in real-time\n\nfunction greet(name) {\n  return \`Hello, \${name}! Let's build something amazing.\`;\n}\n\nconsole.log(greet("World"));`,
+    typescript: `// Welcome to CodeCollab ⚡\n// Join a room and start coding together in real-time\n\nfunction greet(name: string): string {\n  return \`Hello, \${name}! Let's build something amazing.\`;\n}\n\nconsole.log(greet("World"));`,
+    python: `# Welcome to CodeCollab ⚡\n# Join a room and start coding together in real-time\n\ndef greet(name):\n    return f"Hello, {name}! Let's build something amazing."\n\nprint(greet("World"))`,
+    java: `// Welcome to CodeCollab ⚡\n// Join a room and start coding together in real-time\n\npublic class Main {\n    public static String greet(String name) {\n        return "Hello, " + name + "! Let's build something amazing.";\n    }\n\n    public static void main(String[] args) {\n        System.out.println(greet("World"));\n    }\n}`,
+    cpp: `// Welcome to CodeCollab ⚡\n// Join a room and start coding together in real-time\n#include <iostream>\n#include <string>\nusing namespace std;\n\nstring greet(string name) {\n    return "Hello, " + name + "! Let's build something amazing.";\n}\n\nint main() {\n    cout << greet("World") << endl;\n    return 0;\n}`,
+    rust: `// Welcome to CodeCollab ⚡\n// Join a room and start coding together in real-time\n\nfn greet(name: &str) -> String {\n    format!("Hello, {}! Let's build something amazing.", name)\n}\n\nfn main() {\n    println!("{}", greet("World"));\n}`
+  };
+
+  const [language, setLanguage] = useState('javascript');
+  const [currentCode, setCurrentCode] = useState(boilerplates.javascript);
+  const [codeByLang, setCodeByLang] = useState(() => ({ ...boilerplates }));
+
+  const handleLanguageChange = (newLang) => {
+    setCodeByLang(prev => {
+      const updated = { ...prev, [language]: currentCode };
+      setCurrentCode(updated[newLang] !== undefined ? updated[newLang] : (boilerplates[newLang] || ''));
+      return updated;
+    });
+    setLanguage(newLang);
+  };
+
+  const [connectionStatus, setConnectionStatus] = useState('Disconnected');
+  const [usersInRoom, setUsersInRoom] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [activityLog, setActivityLog] = useState([]);
+
+  useEffect(() => {
+    const isTextTarget = (el) => {
+      if (!el) return false;
+      return !!el.closest('#editor-container, input, textarea, .monaco-editor');
+    };
+
+    const moveCursor = (e) => {
+      setCursorPos({ x: e.clientX, y: e.clientY });
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      setIsOverText(isTextTarget(target));
+    };
+    window.addEventListener('mousemove', moveCursor);
+
+    let animationFrame;
+    const animateTrail = () => {
+      trailRef.current.x += (cursorPos.x - trailRef.current.x) * 0.15;
+      trailRef.current.y += (cursorPos.y - trailRef.current.y) * 0.15;
+      setTrailPos({ x: trailRef.current.x, y: trailRef.current.y });
+      animationFrame = requestAnimationFrame(animateTrail);
+    };
+    animateTrail();
+
+    return () => {
+      window.removeEventListener('mousemove', moveCursor);
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [cursorPos]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("cc_token");
+    const name = localStorage.getItem("cc_name");
+    if (token && name) { setUser({ name, token }); }
+  }, []);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type, show: true });
+    setTimeout(() => setToast({ msg: '', type: '', show: false }), 3000);
+  };
+
+  const addActivity = (msg) => {
+    setActivityLog(prev => [msg, ...prev].slice(0, 10));
+  };
+
+  const requireAuth = (callback) => {
+    if (user.token) {
+      callback();
+    } else {
+      setAuthModalVisible(true);
+      setPendingAction(() => callback);
+    }
+  };
+
+  // NEW: matches old app.js's authHeaders() — needed by AIHelper's
+  // explain/debug fetch calls, which previously crashed with
+  // "authHeaders is not a function" because it was never passed down.
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + (user.token || localStorage.getItem('cc_token'))
+  });
+
+  const handleAuth = async (isLogin) => {
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const form = isLogin ? loginForm : regForm;
+
+    if (!form.email || !form.password || (!isLogin && !form.name)) {
+      setAuthError("All fields required"); return;
+    }
+
+    try {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (!res.ok) { setAuthError(data.message || "Auth failed"); return; }
+
+      localStorage.setItem('cc_token', data.token);
+      localStorage.setItem('cc_name', data.name);
+      setUser({ name: data.name, token: data.token });
+      setAuthModalVisible(false);
+      showToast(isLogin ? `Welcome back, ${data.name}!` : 'Account created!', 'success');
+
+      if (pendingAction) { pendingAction(); setPendingAction(null); }
+    } catch (e) {
+      setAuthError("Server error. Try again.");
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('cc_token');
+    localStorage.removeItem('cc_name');
+    setUser({ name: 'Guest', token: null });
+    showToast('Logged out', 'success');
+  };
+
+  const togglePanel = (id) => setPanels({ ...panels, [id]: !panels[id] });
+
+  const handleConnectRoom = (id) => {
+    if (!id) { showToast('Enter a room ID', 'error'); return; }
+    setConnectionStatus('Connecting...');
+    setRoomId(id);
+
+    fetch(`${BASE_URL}/health`).catch(() => {});
+
+    connectWebSocket(id, myId, {
+      onConnect: () => {
+        setConnectionStatus('Connected');
+        showToast(`Joined room: ${id}`, 'success');
+        addActivity(`You joined room ${id}`);
+
+        if (user.token) {
+          fetch(`${BASE_URL}/api/room/${id}`, {
+              headers: { 'Authorization': `Bearer ${user.token}` }
+          }).then(r => r.json()).then(room => {
+            if (room.currentCode) setCurrentCode(room.currentCode);
+            if (room.language) setLanguage(room.language);
+          }).catch(() => {});
+        }
+      },
+      onCodeUpdate: (newCode) => setCurrentCode(newCode),
+      onUsersUpdate: (users) => setUsersInRoom(users),
+      onChatReceive: (msg) => {
+        setChatMessages(prev => [...prev, msg]);
+        addActivity(`${msg.userId === myId ? 'You' : msg.name}: ${msg.message}`);
+      },
+      onDisconnect: () => setConnectionStatus('Disconnected'),
+      onError: () => setConnectionStatus('Disconnected')
+    });
+  };
+
+  const handleSendChat = () => {
+    if (!chatInput.trim()) return;
+    if (connectionStatus !== 'Connected') { showToast('Join a room first', 'error'); return; }
+
+    sendSocketChatMessage(roomId, myId, user.name, chatInput);
+    setChatInput('');
+  };
+
+  return (
+    <>
+      <div className="cursor" style={{ left: cursorPos.x, top: cursorPos.y }}></div>
+      <div className="cursor-trail" style={{ left: trailPos.x, top: trailPos.y }}></div>
+      {caretPos.visible && (
+        <div
+          className="editor-caret"
+          style={{ left: caretPos.left, top: caretPos.top, height: caretPos.height }}
+        ></div>
+      )}
+      <div className="noise"></div>
+
+      <div className="app-screen">
+        <header className="topbar">
+          <div className="topbar-left">
+            <div className="app-logo">
+              <span className="logo-bracket">{'{'}</span><span className="logo-dot sm"></span><span className="logo-bracket">{'}'}</span>
+            </div>
+            <span className="app-name">Code-Forge--AI</span>
+            <span className="app-credit">Personal project by Adhikari Manohar ⚡️</span>
+            <div className="status-pill">
+              <span className={`status-dot ${connectionStatus === 'Connected' ? 'connected' : ''}`}></span>
+              <span>{connectionStatus}</span>
+            </div>
+          </div>
+
+          <div className="topbar-center">
+            <div className="room-bar">
+              <span className="room-label">ROOM</span>
+              <input value={roomId} onChange={(e) => setRoomId(e.target.value)} placeholder="enter-room-id" spellCheck="false" />
+              <button className="room-btn join-btn" onClick={() => requireAuth(() => handleConnectRoom(roomId))}>Join</button>
+              <button className="room-btn new-btn" onClick={() => requireAuth(() => handleConnectRoom(Math.random().toString(36).substr(2, 8)))}>+ New</button>
+            </div>
+          </div>
+
+          <div className="topbar-right">
+            <select value={language} onChange={(e) => handleLanguageChange(e.target.value)} className="lang-select">
+              <option value="javascript">JS</option>
+              <option value="java">Java</option>
+              <option value="python">Python</option>
+              <option value="cpp">C++</option>
+              <option value="typescript">TS</option>
+              <option value="rust">Rust</option>
+            </select>
+            <div className="user-pill">
+              <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
+              <span>{user.name}</span>
+            </div>
+            <button className="logout-btn" onClick={logout}>⏻</button>
+          </div>
+        </header>
+
+        <div className="app-layout">
+          <aside className="sidebar-left">
+            <div className={`panel ${panels.aiPanel ? 'collapsed' : ''}`}>
+              <div className="panel-header" onClick={() => togglePanel('aiPanel')}>
+                <span className="panel-icon">◎</span><span className="panel-title">AI ASSISTANT</span><span className="panel-toggle">▾</span>
+              </div>
+              <div className="panel-body">
+                {/* FIXED: AIHelper now receives the props it actually expects:
+                    editor, showAuthModal, showToast, addActivity, authHeaders */}
+                <AIHelper
+                  editor={editorInstanceRef.current}
+                  showAuthModal={() => setAuthModalVisible(true)}
+                  showToast={showToast}
+                  addActivity={addActivity}
+                  authHeaders={authHeaders}
+                />
+              </div>
+            </div>
+
+            <div className={`panel ${panels.outputPanel ? 'collapsed' : ''}`}>
+              <div className="panel-header" onClick={() => togglePanel('outputPanel')}>
+                <span className="panel-icon">▶</span><span className="panel-title">TERMINAL</span><span className="panel-toggle">▾</span>
+              </div>
+              <div className="panel-body">
+                <Terminal currentCode={currentCode} language={language} />
+              </div>
+            </div>
+
+            <div className={`panel ${panels.roomPanel ? 'collapsed' : ''}`}>
+              <div className="panel-header" onClick={() => togglePanel('roomPanel')}>
+                <span className="panel-icon">◉</span><span className="panel-title">ROOM INFO</span><span className="panel-toggle">▾</span>
+              </div>
+              <div className="panel-body">
+                <div className="room-info-item"><span className="info-label">Room ID</span><span className="info-value">{roomId || '—'}</span></div>
+                <div className="room-info-item"><span className="info-label">Language</span><span className="info-value">{language}</span></div>
+                <div className="room-info-item"><span className="info-label">Participants</span><span className="info-value">{usersInRoom.length}</span></div>
+                <button className="copy-room-btn" onClick={() => { navigator.clipboard.writeText(roomId); showToast('Copied!', 'success'); }}>⎘ Copy Room ID</button>
+              </div>
+            </div>
+          </aside>
+
+          {/* FIXED: pass onEditorMount so App.jsx captures the real Monaco instance */}
+          <Editor
+            language={language}
+            roomId={roomId}
+            code={currentCode}
+            setCode={setCurrentCode}
+            myId={myId}
+            onCaretPixelPosition={setCaretPos}
+            onEditorMount={(editor) => { editorInstanceRef.current = editor; }}
+          />
+
+          <aside className="sidebar-right">
+            <div className={`panel ${panels.onlinePanel ? 'collapsed' : ''}`}>
+              <div className="panel-header" onClick={() => togglePanel('onlinePanel')}>
+                <span className="panel-icon">●</span><span className="panel-title">ONLINE</span><span className="panel-toggle">▾</span>
+                <span className="user-count">{usersInRoom.length}</span>
+              </div>
+              <div className="panel-body">
+                <ul className="user-list">
+                  {usersInRoom.map((u, i) => <li key={i}>{u === myId ? `${u} (you)` : u}</li>)}
+                </ul>
+              </div>
+            </div>
+
+            <div className={`panel ${panels.activityPanel ? 'collapsed' : ''}`}>
+              <div className="panel-header" onClick={() => togglePanel('activityPanel')}>
+                <span className="panel-icon">◎</span><span className="panel-title">ACTIVITY</span><span className="panel-toggle">▾</span>
+              </div>
+              <div className="panel-body">
+                <div className="activity-log">
+                  {activityLog.map((log, i) => <div key={i} className="activity-item">{log}</div>)}
+                </div>
+              </div>
+            </div>
+
+            <div className={`panel ${panels.chatPanel ? 'collapsed' : ''}`}>
+              <div className="panel-header" onClick={() => togglePanel('chatPanel')}>
+                <span className="panel-icon">💬</span><span className="panel-title">CHAT</span><span className="panel-toggle">▾</span>
+              </div>
+              <div className="panel-body">
+                <div className="chat-messages">
+                  {chatMessages.map((msg, i) => (
+                    <div key={i} className={`chat-msg ${msg.userId === myId ? 'chat-me' : 'chat-them'}`}>
+                      <span className="chat-name">{msg.userId === myId ? 'You' : msg.name}</span>
+                      <span className="chat-text">{msg.message}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="chat-input-bar">
+                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} placeholder="Message..." />
+                  <button className="chat-send-btn" onClick={handleSendChat}>→</button>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {authModalVisible && (
+        <div className="modal-overlay">
+          <div className="auth-box modal-box">
+            <button className="modal-close" onClick={() => setAuthModalVisible(false)}>✕</button>
+            <div className="auth-logo" style={{ marginBottom: '16px', justifyContent: 'center' }}>
+              <div className="logo-icon"><span className="logo-bracket">{'{'}</span><span className="logo-dot"></span><span className="logo-bracket">{'}'}</span></div>
+              <div className="logo-text"><h1>Sign in</h1><p>Join a room to code</p></div>
+            </div>
+            <div className="auth-tabs">
+              <button className={`tab ${authTab === 'login' ? 'active' : ''}`} onClick={() => setAuthTab('login')}>Sign In</button>
+              <button className={`tab ${authTab === 'register' ? 'active' : ''}`} onClick={() => setAuthTab('register')}>Sign Up</button>
+            </div>
+            <div className="auth-form">
+              {authTab === 'register' && (
+                <input type="text" placeholder="Name" value={regForm.name} onChange={e => setRegForm({...regForm, name: e.target.value})} className="input-wrap input" />
+              )}
+              <input type="email" placeholder="Email" value={authTab === 'login' ? loginForm.email : regForm.email} onChange={e => authTab === 'login' ? setLoginForm({...loginForm, email: e.target.value}) : setRegForm({...regForm, email: e.target.value})} className="input-wrap input" />
+              <input type="password" placeholder="Password" value={authTab === 'login' ? loginForm.password : regForm.password} onChange={e => authTab === 'login' ? setLoginForm({...loginForm, password: e.target.value}) : setRegForm({...regForm, password: e.target.value})} className="input-wrap input" />
+              <button className="auth-btn" onClick={() => handleAuth(authTab === 'login')}>{authTab === 'login' ? 'Sign In' : 'Create Account'}</button>
+              <p className="error-msg">{authError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`toast ${toast.type} ${toast.show ? 'show' : ''}`}>{toast.msg}</div>
+    </>
+  );
 }
