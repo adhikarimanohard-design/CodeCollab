@@ -33,12 +33,9 @@
   --glow:       0 0 30px rgba(127,255,178,0.15);
   --glow-sm:    0 0 12px rgba(127,255,178,0.2);
 
-  /* Distance the custom cursor shifts to sit beside the text caret.
-     Set to 0 so it renders exactly at the pointer position, no gap. */
   --cursor-text-offset: 0px;
 }
 
-/* Base Reset */
 *, *::before, *::after {
   margin: 0; padding: 0;
   box-sizing: border-box;
@@ -50,7 +47,7 @@ html, body {
   color: var(--text);
   font-family: var(--font-ui);
   overflow: hidden;
-  cursor: none; /* Base cursor hidden */
+  cursor: none; 
 }
 
 /* ============================================
@@ -59,10 +56,9 @@ html, body {
 .cursor, .cursor-trail {
   position: fixed;
   top: 0; left: 0;
-  pointer-events: none !important; /* Clicks pass through */
+  pointer-events: none !important; 
   z-index: 9999;
   border-radius: 50%;
-  /* Base state: dot/ring centered exactly on the pointer coordinates */
   transform: translate(-50%, -50%);
   transition: width 0.2s, height 0.2s, background 0.2s, opacity 0.2s, transform 0.15s ease-out;
   will-change: transform;
@@ -80,30 +76,18 @@ html, body {
   z-index: 9998;
 }
 
-/* Enlarge cursor on buttons */
 body:has(button:hover) .cursor {
   width: 16px; height: 16px;
 }
 
-/* Native OS cursor is fully hidden everywhere, including editor/inputs —
-   the custom .cursor / .cursor-trail elements are the ONLY cursor shown.
-   Previously this was set to `cursor: text` which made the browser's own
-   I-beam appear next to the custom green bar (the "two cursors" bug). */
 #editor-container, #editor-container *, input, textarea {
   cursor: none !important;
 }
 
-/* Monaco renders its own blinking text caret by default. Now that we have
-   a dedicated .editor-caret overlay glued to the real caret position via
-   the Monaco API, Monaco's native caret is hidden so there is only ever
-   ONE visible cursor while typing in the code editor. */
 .monaco-editor .cursor {
   opacity: 0 !important;
 }
 
-/* Dedicated text-caret overlay — positioned via Monaco's real cursor
-   coordinates (see Editor.jsx / App.jsx), NOT mouse position. This is
-   what actually sits exactly beside the last typed character. */
 .editor-caret {
   position: fixed;
   width: 2px;
@@ -115,9 +99,6 @@ body:has(button:hover) .cursor {
   animation: textCaretBlink 1s steps(1) infinite;
 }
 
-/* Plain text inputs (room id, chat, auth) outside Monaco still use the
-   mouse-following custom cursor, just styled as a slim caret when hovering
-   over them. */
 .cursor.cursor-text {
   width: 2px;
   height: 18px;
@@ -242,7 +223,6 @@ body:has(button:hover) .cursor {
 
 .logo-text p { font-size: 11px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
 
-/* Split Layout */
 .auth-split { display: flex; gap: 32px; }
 .auth-split-side { flex: 1; display: flex; flex-direction: column; }
 .auth-side-title { font-size: 14px; font-family: var(--font-display); font-weight: 700; color: var(--text); margin-bottom: 16px; text-align: center; letter-spacing: 0.05em; }
@@ -253,10 +233,6 @@ body:has(button:hover) .cursor {
   background: var(--surface); padding: 8px 4px; color: var(--text3); font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
 }
 
-/* ---- Sign In / Sign Up segmented tab control ----
-   Any pair of buttons that toggle auth mode (regardless of exact class
-   names used in JSX) are targeted here via a resilient combinator:
-   two adjacent buttons inside .auth-split or the modal header area. */
 .auth-tabs,
 .modal-box .tab-group {
   display: inline-flex;
@@ -300,7 +276,6 @@ body:has(button:hover) .cursor {
   box-shadow: 0 4px 18px rgba(127,255,178,0.35);
 }
 
-/* Form Inputs */
 .auth-form { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
 
 .input-wrap.input {
@@ -312,7 +287,6 @@ body:has(button:hover) .cursor {
 .input-wrap.input:focus { border-color: rgba(127,255,178,0.4); box-shadow: 0 0 0 3px rgba(127,255,178,0.08); }
 .input-wrap.input::placeholder { color: var(--text3); }
 
-/* Auth Button */
 .auth-btn {
   width: 100%; padding: 14px; margin-top: 8px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
@@ -342,10 +316,6 @@ body:has(button:hover) .cursor {
 .topbar-center { flex: 2; justify-content: center; }
 .topbar-right { gap: 10px; flex: 1; justify-content: flex-end; }
 
-/* App name is the primary brand mark — made prominent everywhere.
-   flex-shrink:0 + min-width guarantee it never gets squeezed out by
-   the room bar / status pill on narrow screens. order:-1 pins it as
-   the first visible item in topbar-left, ahead of the logo/status pill. */
 .app-name {
   font-family: var(--font-display);
   font-size: 17px;
@@ -361,13 +331,6 @@ body:has(button:hover) .cursor {
   order: -1;
 }
 
-/* Credit line ("Personal project by ...") now renders inline, right next
-   to the app name in the topbar, instead of being pinned to a fixed
-   footer bar at the bottom of the viewport. No DOM/JSX change needed —
-   it already sits beside .app-name in the markup; this is purely
-   reverting the old fixed-position footer treatment. Removing the fixed
-   footer also frees up the vertical space it used to reserve, which is
-   given back to the sidebars (Activity panel etc.) via .app-layout below. */
 .app-credit {
   display: inline-flex !important;
   align-items: center;
@@ -418,12 +381,6 @@ body:has(button:hover) .cursor {
 .panel-header {
   display: flex; align-items: center; gap: 8px; padding: 12px 14px;
   transition: background 0.2s; user-select: none; cursor: none;
-  /* FIX: mobile chat panel wasn't expanding on tap. Two causes addressed:
-     1) no touch-action meant taps inside the scrollable .app-layout could
-        be swallowed/delayed by the browser's scroll-gesture detection,
-        especially on the lowest panel (Chat) reached only after scrolling.
-     2) no explicit stacking context/z-index, so on some mobile browsers
-        the header could receive a tap that landed on a sibling instead. */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   position: relative;
@@ -443,28 +400,6 @@ body:has(button:hover) .cursor {
 .info-value { font-family: var(--font-mono); font-size: 11px; color: var(--accent); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .copy-room-btn { width: 100%; margin-top: 10px; padding: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text2); font-family: var(--font-mono); font-size: 11px; transition: all 0.2s; letter-spacing: 0.05em; cursor: none; }
 .copy-room-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ACTIVITY panel (2nd panel inside sidebar-right — Online / Activity /
-   Chat order). Previously this rule forced `display:flex !important` /
-   `display:block !important` on every state, which permanently glued the
-   panel open and fought the collapse/expand toggle in App.jsx — the
-   panel-body would render, then the very next state update (the toggle's
-   default "collapsed" flag on first mount) still applied `.collapsed`,
-   and because both rules carried !important the cascade result depended
-   on source order/specificity ties, which is exactly the kind of thing
-   that "half-works" — it renders open, but the first tap on the header
-   does nothing because CSS is still fighting the class change under the
-   hood. Now we simply make sure the panel is NOT collapsed by default
-   (no `.collapsed` class assumed here) and let .panel.collapsed do its
-   job normally, same as every other panel — so the very first click
-   toggles it correctly instead of being overridden. */
-.sidebar-right .panel:nth-child(2) {
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-right .panel:nth-child(2):not(.collapsed) .panel-body {
-  display: block;
-}
 
 /* Lists & Activities */
 .user-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
@@ -525,13 +460,6 @@ body:has(button:hover) .cursor {
   box-shadow: 0 6px 20px rgba(255,106,240,0.28);
 }
 
-/* STRUCTURAL FALLBACK — the AI Assistant panel is always the first panel
-   inside .sidebar-left (per App.jsx panel order: aiPanel, outputPanel,
-   roomPanel). This colors every <button> rendered inside it — Explain
-   Code, Debug Code, and its own Run Code control — WITHOUT depending on
-   AIHelper.jsx using specific class names. Colors are persistent (not
-   hover-only) so each action reads at a glance:
-   1st button (Explain) → green, 2nd (Debug) → pink, 3rd (Run) → cyan. */
 .sidebar-left .panel:first-child .panel-body button {
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -561,9 +489,6 @@ body:has(button:hover) .cursor {
 }
 .sidebar-left .panel:first-child .panel-body button:active { transform: translateY(0); }
 
-/* Terminal panel (2nd panel in sidebar-left) — its own Run Code button,
-   colored cyan to match the AI panel's Run Code so the action reads the
-   same everywhere it appears. */
 .sidebar-left .panel:nth-child(2) .panel-body button {
   border: 1px solid rgba(0,229,255,0.35);
   border-radius: var(--radius);
@@ -581,7 +506,6 @@ body:has(button:hover) .cursor {
 }
 .sidebar-left .panel:nth-child(2) .panel-body button:disabled { opacity: 0.5; }
 
-/* AI output surface — framed like a live console with its own header rail */
 .ai-output {
   position: relative;
   background: var(--bg3);
@@ -604,10 +528,6 @@ body:has(button:hover) .cursor {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 0 1px rgba(127,255,178,0.04);
 }
 
-/* ID-based fallback: applies the exact same fix directly to #aiOutput,
-   since AIHelper.jsx's output div doesn't carry the .ai-output class.
-   This makes text wrap downward instead of spilling sideways without
-   needing any JSX change. */
 #aiOutput {
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -641,11 +561,6 @@ body:has(button:hover) .cursor {
 .ai-output::-webkit-scrollbar { width: 3px; }
 .ai-output::-webkit-scrollbar-thumb { background: var(--border2); }
 
-/* Markdown output (Explain/Debug Code) often renders <pre>/<code> blocks,
-   which carry the browser's own default white-space:pre — that default
-   silently overrides the wrapping rules above and is exactly what was
-   cutting text off on the right edge on mobile. Force these back to
-   wrapping too, in both the class- and ID-based output containers. */
 .ai-output pre, .ai-output code,
 #aiOutput pre, #aiOutput code {
   white-space: pre-wrap !important;
@@ -738,38 +653,37 @@ body:has(button:hover) .cursor {
   .auth-tabs, .modal-box .tab-group { width: 100%; }
   .auth-tabs button, .modal-box .tab-group button, .auth-tab { flex: 1; text-align: center; }
 
-  /* Previously topbar-left and topbar-right both had flex:1 and sat side
-     by side in one row with flex-wrap on the parent — flex items shrink
-     to their min-content and get visually clipped ("Code-Forge-",
-     "Discon...") before the browser ever wraps them to a new line, and
-     topbar-center (the Room bar) got squeezed out of view entirely
-     instead of dropping to its own row. Switching .topbar itself to a
-     column stack guarantees each section gets its own full-width row on
-     mobile, so nothing can be clipped or pushed off-screen. */
   .topbar { flex-direction: column; align-items: stretch; height: auto; padding: 10px 12px; gap: 8px; }
   .topbar-left, .topbar-right {
     width: 100%; flex: none;
     flex-wrap: wrap; row-gap: 6px;
   }
-  .topbar-left { order: 1; }
+  
+  .topbar-left { 
+    order: 1; 
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; 
+    gap: 8px;
+  }
+  
   .topbar-center { order: 2; width: 100%; }
   .topbar-right { order: 3; justify-content: space-between; }
 
-  /* App name stays visible and prominent even on small screens */
-  .app-name { display: block; font-size: 15px; }
-
-  /* Credit line wraps under the app name instead of forcing topbar-left
-     onto one cramped row on narrow screens. */
-  .app-credit {
-    flex-basis: 100%;
-    margin-left: 0;
-    padding-left: 0;
-    border-left: none;
-    order: 3;
+  .app-name { 
+    display: inline-block; 
+    font-size: 15px; 
   }
 
-  /* Status pill ("Connected"/"Disconnected") wraps onto its own line
-     within topbar-left instead of getting truncated beside the app name. */
+  .app-credit {
+    display: inline-flex !important;
+    flex-basis: auto;
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
+    order: unset; 
+  }
+
   .status-pill { flex-basis: 100%; }
 
   .room-bar { width: 100%; justify-content: space-between; }
@@ -778,15 +692,8 @@ body:has(button:hover) .cursor {
   .app-layout {
     flex-direction: column;
     overflow-y: auto;
-    min-height: 0; /* critical: without this, a flex:1 child ignores
-                      overflow-y:auto and grows past the viewport instead
-                      of scrolling — since html/body are overflow:hidden,
-                      that pushes Online/Activity/Chat somewhere totally
-                      unreachable, which is why they were "disappearing" */
-    -webkit-overflow-scrolling: touch; /* FIX: native momentum scroll so
-      taps on panel headers (esp. Chat, reached only after scrolling) are
-      registered as taps instead of getting eaten by scroll-gesture
-      detection on iOS/Android webviews. */
+    min-height: 0; 
+    -webkit-overflow-scrolling: touch; 
   }
   .editor-main { height: 50vh; min-height: 260px; flex-shrink: 0; }
 
@@ -797,33 +704,19 @@ body:has(button:hover) .cursor {
   }
   .sidebar-left .panel { min-width: 260px; border-bottom: none; border-right: 1px solid var(--border); flex-shrink: 0; }
 
-  /* Right sidebar (Online / Activity / Chat) stacks vertically so every
-     panel is reachable by scrolling down the page — nothing sits hidden
-     off-screen behind a sideways swipe. */
   .sidebar-right {
     width: 100%; border-left: none;
     flex-direction: column; overflow: visible; height: auto;
     border-top: 1px solid var(--border);
     order: 3;
-    display: flex !important; /* ensure the right sidebar always renders on mobile */
+    display: flex !important; 
   }
   .sidebar-right .panel { width: 100%; border-right: none; }
 
-  /* Chat is hidden on mobile (and only on mobile) — Online and Activity,
-     the other two panels in sidebar-right, stay visible per the base-level
-     Activity fix above plus Online's default (unhidden) styling. */
   .sidebar-right .panel:nth-child(3) { display: none; }
 
-  /* Bigger, unambiguous tap target for panel headers on mobile — the
-     desktop 12px vertical padding is comfortable for a mouse click but
-     tight for a fingertip, which made the Chat panel header feel
-     unresponsive even once the touch-action fix above was in place. */
   .panel-header { padding: 16px 14px; }
 
-  /* AI ASSISTANT box shrunk on mobile only — smaller output area and
-     tighter buttons so the panel takes up less vertical space, leaving
-     more room for Online/Activity to fit into view without excessive
-     scrolling. Desktop sizing is untouched. */
   .ai-output,
   #aiOutput {
     min-height: 60px;
@@ -839,9 +732,6 @@ body:has(button:hover) .cursor {
   }
   .sidebar-left .panel:first-child .panel-body { padding: 10px; }
 
-  /* TERMINAL box shrunk on mobile too, same reasoning as AI Assistant
-     above — smaller output area and tighter button/padding so the
-     combined page height leaves room for Activity to fit into view. */
   .terminal-output {
     min-height: 50px;
     max-height: 90px;
@@ -857,15 +747,11 @@ body:has(button:hover) .cursor {
 
   .editor-statusbar { font-size: 9px; gap: 8px; padding: 0 8px; }
   .modal-box { width: 95vw; padding: 24px 16px; }
-  /* NOTE: keep width:100% (set earlier) so this row stays full-width and
-     stacked — a bare flex:0 here would shrink it back to content width
-     and reintroduce the clipped/overlapping topbar from before. */
+  
   .topbar-right { gap: 4px; }
   .editor-actions { display: none; }
   .room-btn { padding: 5px 8px; font-size: 10px; }
 
-  /* Compact the right-side controls so the app name never gets crowded
-     out — Guest pill shrinks to just the avatar, dropdown narrows. */
   .user-pill span:last-child { display: none; }
   .user-pill { padding: 4px; }
   .lang-select { width: 44px; padding: 4px 2px; font-size: 9px; }
