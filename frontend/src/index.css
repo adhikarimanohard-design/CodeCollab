@@ -33,9 +33,6 @@
   --glow:       0 0 30px rgba(127,255,178,0.15);
   --glow-sm:    0 0 12px rgba(127,255,178,0.2);
 
-  /* Height reserved at the bottom of the viewport for the credit footer */
-  --footer-h:   28px;
-
   /* Distance the custom cursor shifts to sit beside the text caret.
      Set to 0 so it renders exactly at the pointer position, no gap. */
   --cursor-text-offset: 0px;
@@ -364,33 +361,28 @@ body:has(button:hover) .cursor {
   order: -1;
 }
 
-/* Credit line ("Personal project by ...") is relocated out of the topbar
-   into a persistent, always-visible footer bar via fixed positioning —
-   no structural/DOM change needed, it stays exactly where it is in markup. */
+/* Credit line ("Personal project by ...") now renders inline, right next
+   to the app name in the topbar, instead of being pinned to a fixed
+   footer bar at the bottom of the viewport. No DOM/JSX change needed —
+   it already sits beside .app-name in the markup; this is purely
+   reverting the old fixed-position footer treatment. Removing the fixed
+   footer also frees up the vertical space it used to reserve, which is
+   given back to the sidebars (Activity panel etc.) via .app-layout below. */
 .app-credit {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  height: var(--footer-h);
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
   font-size: 10px;
   color: var(--text2);
   letter-spacing: 0.06em;
   white-space: nowrap;
-  z-index: 400;
-  box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
-  pointer-events: none; /* purely decorative — must never intercept taps
-                            meant for content scrolled underneath it,
-                            which is what was blocking clicks on the
-                            Chat panel (the last thing on the page) */
+  opacity: 0.75;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-/* Reserve space at the bottom of the layout so the fixed footer never
-   overlaps the editor, sidebars, or terminal output. */
-.app-layout { padding-bottom: var(--footer-h); }
 
 .status-pill { display: flex; align-items: center; gap: 6px; padding: 3px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 10px; color: var(--text2); letter-spacing: 0.08em; }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); transition: background 0.3s, box-shadow 0.3s; }
@@ -453,17 +445,25 @@ body:has(button:hover) .cursor {
 .copy-room-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ACTIVITY panel (2nd panel inside sidebar-right — Online / Activity /
-   Chat order) is force-visible unconditionally, on desktop AND mobile.
-   This sits at the base level (outside any media query) so it can never
-   be left hidden by a stale "collapsed" class or a narrower mobile-only
-   override — !important beats both the .panel.collapsed rule above and
-   any non-!important inline style a toggle might apply. */
+   Chat order). Previously this rule forced `display:flex !important` /
+   `display:block !important` on every state, which permanently glued the
+   panel open and fought the collapse/expand toggle in App.jsx — the
+   panel-body would render, then the very next state update (the toggle's
+   default "collapsed" flag on first mount) still applied `.collapsed`,
+   and because both rules carried !important the cascade result depended
+   on source order/specificity ties, which is exactly the kind of thing
+   that "half-works" — it renders open, but the first tap on the header
+   does nothing because CSS is still fighting the class change under the
+   hood. Now we simply make sure the panel is NOT collapsed by default
+   (no `.collapsed` class assumed here) and let .panel.collapsed do its
+   job normally, same as every other panel — so the very first click
+   toggles it correctly instead of being overridden. */
 .sidebar-right .panel:nth-child(2) {
-  display: flex !important;
+  display: flex;
   flex-direction: column;
 }
-.sidebar-right .panel:nth-child(2) .panel-body {
-  display: block !important;
+.sidebar-right .panel:nth-child(2):not(.collapsed) .panel-body {
+  display: block;
 }
 
 /* Lists & Activities */
@@ -758,6 +758,16 @@ body:has(button:hover) .cursor {
   /* App name stays visible and prominent even on small screens */
   .app-name { display: block; font-size: 15px; }
 
+  /* Credit line wraps under the app name instead of forcing topbar-left
+     onto one cramped row on narrow screens. */
+  .app-credit {
+    flex-basis: 100%;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    order: 3;
+  }
+
   /* Status pill ("Connected"/"Disconnected") wraps onto its own line
      within topbar-left instead of getting truncated beside the app name. */
   .status-pill { flex-basis: 100%; }
@@ -773,7 +783,6 @@ body:has(button:hover) .cursor {
                       of scrolling — since html/body are overflow:hidden,
                       that pushes Online/Activity/Chat somewhere totally
                       unreachable, which is why they were "disappearing" */
-    padding-bottom: calc(var(--footer-h) + 8px);
     -webkit-overflow-scrolling: touch; /* FIX: native momentum scroll so
       taps on panel headers (esp. Chat, reached only after scrolling) are
       registered as taps instead of getting eaten by scroll-gesture
@@ -860,7 +869,4 @@ body:has(button:hover) .cursor {
   .user-pill span:last-child { display: none; }
   .user-pill { padding: 4px; }
   .lang-select { width: 44px; padding: 4px 2px; font-size: 9px; }
-
-  /* Footer credit bar — always visible on mobile */
-  .app-credit { font-size: 9px; padding: 0 10px; }
 }
