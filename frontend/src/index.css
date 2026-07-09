@@ -42,7 +42,8 @@
 }
 
 html, body {
-  width: 100%; height: 100%;
+  width: 100%; 
+  height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
@@ -301,7 +302,15 @@ body:has(button:hover) .cursor {
 /* ============================================
    APP LAYOUT & TOPBAR
    ============================================ */
-.app-screen { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+/* FIX: Use 100dvh (dynamic viewport height) so mobile browser nav bars don't cut off the bottom content */
+.app-screen { 
+  width: 100vw; 
+  height: 100dvh; 
+  display: flex; 
+  flex-direction: column; 
+  background: var(--bg); 
+}
+
 .topbar {
   height: 52px; background: var(--surface); border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between; padding: 0 16px; gap: 16px;
@@ -377,7 +386,7 @@ body:has(button:hover) .cursor {
 .sidebar-left::-webkit-scrollbar-thumb, .sidebar-right::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 /* Panels */
-.panel { border-bottom: 1px solid var(--border); overflow: hidden; }
+.panel { border-bottom: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
 .panel-header {
   display: flex; align-items: center; gap: 8px; padding: 12px 14px;
   transition: background 0.2s; user-select: none; cursor: none;
@@ -391,8 +400,8 @@ body:has(button:hover) .cursor {
 .panel-title { font-size: 10px; letter-spacing: 0.15em; color: var(--text3); font-weight: 700; flex: 1; }
 .panel-toggle { color: var(--text3); font-size: 12px; transition: transform 0.3s; }
 .panel.collapsed .panel-toggle { transform: rotate(-90deg); }
-.panel.collapsed .panel-body { display: none; }
-.panel-body { padding: 12px; }
+.panel.collapsed .panel-body { display: none !important; }
+.panel-body { padding: 12px; display: block; }
 .user-count { width: 18px; height: 18px; background: var(--accent-dim); border: 1px solid rgba(127,255,178,0.2); border-radius: 4px; font-size: 10px; color: var(--accent); display: flex; align-items: center; justify-content: center; }
 .room-info-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
 .room-info-item:last-of-type { border: none; }
@@ -694,7 +703,9 @@ body:has(button:hover) .cursor {
     overflow-y: auto;
     min-height: 0; 
     -webkit-overflow-scrolling: touch; 
+    padding-bottom: 24px; /* Give room at the absolute bottom of the page to scroll past the Activity Panel */
   }
+  
   .editor-main { height: 50vh; min-height: 260px; flex-shrink: 0; }
 
   .sidebar-left {
@@ -716,6 +727,9 @@ body:has(button:hover) .cursor {
   .sidebar-right .panel:nth-child(3) { display: none; }
 
   .panel-header { padding: 16px 14px; }
+  
+  .panel-header:hover { background: transparent; }
+  .panel-header:active { background: var(--surface2); }
 
   .ai-output,
   #aiOutput {
