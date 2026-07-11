@@ -175,6 +175,15 @@ export default function App() {
 
   const togglePanel = (id) => setPanels({ ...panels, [id]: !panels[id] });
 
+  // The backend seeds brand-new rooms with a generic placeholder like
+  // "// Start coding..." (not an empty string), so a plain empty-string
+  // check never caught it — this treats that placeholder the same as "no
+  // real code yet" regardless of which comment syntax it uses.
+  const isPlaceholderCode = (code) => {
+    if (!code || !code.trim()) return true;
+    return /^(\/\/|#)?\s*start coding/i.test(code.trim());
+  };
+
   const handleConnectRoom = (id) => {
     if (!id) { showToast('Enter a room ID', 'error'); return; }
     setConnectionStatus('Connecting...');
@@ -192,18 +201,18 @@ export default function App() {
           fetch(`${BASE_URL}/api/room/${id}`, {
               headers: { 'Authorization': `Bearer ${user.token}` }
           }).then(r => r.json()).then(room => {
-            if (room.currentCode) setCurrentCode(room.currentCode);
+            if (room.currentCode && !isPlaceholderCode(room.currentCode)) setCurrentCode(room.currentCode);
             if (room.language) setLanguage(room.language);
           }).catch(() => {});
         }
       },
-   onCodeUpdate: (newCode) => {
-  if (newCode && newCode.trim()) {
-    setCurrentCode(newCode);
-  } else {
-    setCurrentCode(boilerplates[language] || '');
-  }
-},
+      onCodeUpdate: (newCode) => {
+        if (!isPlaceholderCode(newCode)) {
+          setCurrentCode(newCode);
+        } else {
+          setCurrentCode(boilerplates[language] || '');
+        }
+      },
       onUsersUpdate: (users) => setUsersInRoom(users),
       onChatReceive: (msg) => {
         setChatMessages(prev => [...prev, msg]);
@@ -240,7 +249,10 @@ export default function App() {
             <div className="app-logo">
               <span className="logo-bracket">{'{'}</span><span className="logo-dot sm"></span><span className="logo-bracket">{'}'}</span>
             </div>
-            <span ClassName="app-name">Code-Forge--AI by adhikari manohar</span>
+            {/* FIXED: className was capitalized as ClassName, which React/the
+                DOM don't recognize — the class (and its gradient text style)
+                was silently never being applied. */}
+            <span className="app-name">Code-Forge--AI by adhikari manohar</span>
             <div className="status-pill">
               <span className={`status-dot ${connectionStatus === 'Connected' ? 'connected' : ''}`}></span>
               <span>{connectionStatus}</span>
