@@ -197,7 +197,13 @@ export default function App() {
           }).catch(() => {});
         }
       },
-      onCodeUpdate: (newCode) => setCurrentCode(newCode),
+   onCodeUpdate: (newCode) => {
+  if (newCode && newCode.trim()) {
+    setCurrentCode(newCode);
+  } else {
+    setCurrentCode(boilerplates[language] || '');
+  }
+},
       onUsersUpdate: (users) => setUsersInRoom(users),
       onChatReceive: (msg) => {
         setChatMessages(prev => [...prev, msg]);
