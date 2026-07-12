@@ -247,12 +247,12 @@ export default function App() {
         <header className="topbar">
           <div className="topbar-left">
             <div className="app-logo">
-              <span className="logo-bracket">{'{'}</span><span className="logo-dot sm"></span><span className="logo-bracket">{'}'}</span>
+              <span className="logo-emoji">💻</span>
             </div>
             {/* FIXED: className was capitalized as ClassName, which React/the
                 DOM don't recognize — the class (and its gradient text style)
                 was silently never being applied. */}
-            <span className="app-name">Code-Forge--AI by adhikari manohar</span>
+            <span className="app-name">Code-Forge--AI by Adhikari Manohar Dash 👨‍💻</span>
             <div className="status-pill">
               <span className={`status-dot ${connectionStatus === 'Connected' ? 'connected' : ''}`}></span>
               <span>{connectionStatus}</span>
