@@ -340,6 +340,16 @@ body:has(button:hover) .cursor {
   filter: drop-shadow(0 0 6px rgba(127,255,178,0.4));
 }
 
+/* Kept as its own span, separate from .app-name — that gradient text
+   effect (background-clip:text + text-fill-color:transparent) strips
+   color from anything inside it, which is why the emoji was showing as
+   a flat blue silhouette instead of full color. */
+.app-name-emoji {
+  font-size: 17px;
+  line-height: 1;
+  margin-left: 4px;
+}
+
 .app-name {
   font-family: var(--font-display);
   font-size: 17px;
