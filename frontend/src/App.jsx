@@ -252,7 +252,8 @@ export default function App() {
             {/* FIXED: className was capitalized as ClassName, which React/the
                 DOM don't recognize — the class (and its gradient text style)
                 was silently never being applied. */}
-            <span className="app-name">Code-Forge--AI by Adhikari Manohar Dash 👨‍💻</span>
+            <span className="app-name">Code-Forge--AI by Adhikari Manohar Dash</span>
+            <span className="app-name-emoji">👨‍💻</span>
             <div className="status-pill">
               <span className={`status-dot ${connectionStatus === 'Connected' ? 'connected' : ''}`}></span>
               <span>{connectionStatus}</span>
